@@ -11,14 +11,21 @@ spec:
   strategy:
     canary:
       analysis:
-        templateName: success-rate
+        templates:
+        - templateName: success-rate-job
+        startingStep: 1 # delay starting analysis run until setWeight: 20%
         args:
         - name: ingress
           value: canary-demo
+        - name: service
+          value: canary-demo-preview
       canaryService: canary-demo-preview
       steps:
-      - setWeight: 40
+      - setWeight: 20
       - pause: {}
+      - setWeight: 40
+      - pause:
+          duration: 10
       - setWeight: 60
       - pause:
           duration: 10

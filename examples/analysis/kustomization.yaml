@@ -5,3 +5,4 @@ resources:
 - ../base
 - rollout-with-analysis.yaml
 - analysis-success-rate.yaml
+- analysis-success-rate-job.yaml

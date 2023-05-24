@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: success-rate-job
+spec:
+  args:
+  - name: ingress
+  - name: service
+  metrics:
+  - name: success-rate
+    provider:
+      job:
+        metadata:
+          annotations:
+            service: "{{args.service}}"
+          labels:
+            service: "{{args.service}}"
+        spec:
+          backoffLimit: 1
+          template:
+            spec:
+              containers:
+              - name: curl
+                image: curlimages/curl:8.1.1
+                command:
+                - curl
+                args:
+                - -v
+                - --max-time
+                - "1"
+                - -sSf
+                - -o
+                - /dev/null
+                - http://{{args.service}}/color
+              restartPolicy: Never
