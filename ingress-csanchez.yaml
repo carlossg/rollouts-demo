@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: gce
+  name: canary-csanchez
+spec:
+  rules:
+  - host: canary.argo.csanchez.org
+    http:
+      paths:
+      - backend:
+          service:
+            name: canary-demo
+            port:
+              name: http
+        path: /
+        pathType: Prefix
+  - host: canary-preview.argo.csanchez.org
+    http:
+      paths:
+      - backend:
+          service:
+            name: canary-demo-preview
+            port:
+              name: http
+        path: /
+        pathType: Prefix
