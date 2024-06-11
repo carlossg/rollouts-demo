@@ -16,6 +16,12 @@ spec:
         - name: ingress
           value: canary-demo
       canaryService: canary-demo-preview
+      stableMetadata:
+        labels:
+          role: stable
+      canaryMetadata:
+        labels:
+          role: canary
       steps:
       - setWeight: 40
       - pause: {}
