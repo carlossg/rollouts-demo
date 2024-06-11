@@ -20,6 +20,12 @@ spec:
         - name: service
           value: canary-demo-preview
       canaryService: canary-demo-preview
+      stableMetadata:
+        labels:
+          role: stable
+      canaryMetadata:
+        labels:
+          role: canary
       steps:
       - setWeight: 20
       - pause: {}

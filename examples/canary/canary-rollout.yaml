@@ -28,6 +28,12 @@ spec:
   strategy:
     canary:
       canaryService: canary-demo-preview
+      stableMetadata:
+        labels:
+          role: stable
+      canaryMetadata:
+        labels:
+          role: canary
       steps:
       - setWeight: 20
       - pause: {}
