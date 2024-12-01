@@ -1,0 +1,62 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: success-rate-job-ai
+  labels:
+    app: success-rate-job-ai
+spec:
+  args:
+  - name: ingress
+  - name: service
+  metrics:
+  - name: success-rate
+    provider:
+      job:
+        metadata:
+          annotations:
+            service: "{{args.service}}"
+          labels:
+            service: "{{args.service}}"
+        spec:
+          backoffLimit: 0
+          ttlSecondsAfterFinished: 1200
+          template:
+            metadata:
+              labels:
+                app: success-rate-job-ai
+            spec:
+              restartPolicy: Never
+              containers:
+              - name: ai
+                image: us-central1-docker.pkg.dev/api-project-642841493686/github/argo-rollouts-ai:580503203f0460f299e1f4de569b5876c597a37b
+                imagePullPolicy: IfNotPresent
+                command:
+                - python
+                args:
+                - -u
+                - /app/app.py
+                - http://{{args.service}}/color
+                env:
+                - name: GOOGLE_API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: success-rate-job-ai
+                      key: google_api_key
+                volumeMounts:
+                - name: empty
+                  mountPath: /logs
+                # - name: code
+                #   mountPath: /app
+                resources:
+                  requests:
+                    memory: "32Mi"
+                    cpu: "250m"
+                  limits:
+                    memory: "64Mi"
+                    cpu: "500m"
+              volumes:
+              - name: empty
+                emptyDir: {}
+              # - name: code
+              #   configMap:
+              #     name: canary-demo-6mm6k4ffck

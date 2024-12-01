@@ -12,7 +12,7 @@ spec:
     canary:
       analysis:
         templates:
-        - templateName: success-rate-job
+        - templateName: success-rate-job-ai
         startingStep: 1 # delay starting analysis run until setWeight: 20%
         args:
         - name: ingress

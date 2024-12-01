@@ -6,3 +6,4 @@ resources:
 - rollout-with-analysis.yaml
 - analysis-success-rate.yaml
 - analysis-success-rate-job.yaml
+- analysis-success-rate-job-ai.yaml
