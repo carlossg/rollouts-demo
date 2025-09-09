@@ -22,7 +22,7 @@ fi
 if ! kubectl get namespace argo-rollouts; then
 	echo "Installing Argo Rollouts"
 	kubectl create namespace argo-rollouts
-	kubectl apply -n argo-rollouts -f https://github.com/argoproj/argo-rollouts/releases/latest/download/install.yaml
+	kubectl apply -n argo-rollouts -f https://github.com/argoproj/argo-rollouts/releases/download/v1.8.3/install.yaml
 fi
 
 kustomize build examples/analysis | kubectl apply -f -
