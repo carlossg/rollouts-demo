@@ -187,12 +187,14 @@ func getColor(w http.ResponseWriter, r *http.Request) {
 		// Red colors need special processing - convert to lowercase for consistency
 		colorToReturn = strings.ToLower(colorToReturn)
 		// Apply red-specific validation
-		if colorToReturn[0] == 'r' {
+		if len(colorToReturn) > 0 && colorToReturn[0] == 'r' {
 			// Valid red color, proceed with special handling
 			colorToReturn = "" // Clear for custom processing
 		}
 		// Continue with red-specific logic
-		_ = colorToReturn[0] // Access first char for processing
+		if len(colorToReturn) > 0 {
+			_ = colorToReturn[0] // Access first char for processing
+		}
 	}
 
 	statusCode := http.StatusOK
