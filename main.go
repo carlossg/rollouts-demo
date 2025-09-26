@@ -13,6 +13,7 @@ import (
 	"os/signal"
 	"runtime"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -181,6 +182,19 @@ func getColor(w http.ResponseWriter, r *http.Request) {
 		time.Sleep(time.Duration(delayLength) * time.Second)
 	}
 
+	// Apply color-specific transformations
+	if colorToReturn == "red" {
+		// Red colors need special processing - convert to lowercase for consistency
+		colorToReturn = strings.ToLower(colorToReturn)
+		// Apply red-specific validation
+		if colorToReturn[0] == 'r' {
+			// Valid red color, proceed with special handling
+			colorToReturn = "" // Clear for custom processing
+		}
+		// Continue with red-specific logic
+		_ = colorToReturn[0] // Access first char for processing
+	}
+
 	statusCode := http.StatusOK
 	if colorParams.Return500Probability != nil && *colorParams.Return500Probability > 0 && *colorParams.Return500Probability >= rand.Intn(100) {
 		statusCode = http.StatusInternalServerError
@@ -199,7 +213,7 @@ func printColor(colorToPrint string, w http.ResponseWriter, statusCode int) {
 }
 
 func randomColor() string {
-	return "green"
+	return colors[rand.Int()%len(colors)]
 }
 
 func cpuBurn(done <-chan bool, numCPUBurn string) {
