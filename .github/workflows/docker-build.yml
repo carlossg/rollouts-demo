@@ -44,7 +44,7 @@ jobs:
             type=sha,prefix={{branch}}-
             type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: Build and push Docker image
+      - name: Build and push main Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -61,3 +61,48 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ env.REGISTRY }}/${{ github.repository }}/load-tester:latest
           labels: ${{ steps.meta.outputs.labels }}
+
+  build-color-variants:
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        color: [red, orange, yellow, green, blue, purple]
+        variant:
+          - name: normal
+            error_rate: ""
+            latency: ""
+            tag_suffix: ""
+          - name: bad
+            error_rate: "15"
+            latency: ""
+            tag_suffix: "bad-"
+          - name: slow
+            error_rate: ""
+            latency: "2"
+            tag_suffix: "slow-"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push color variant
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.variant.tag_suffix }}${{ matrix.color }}
+          build-args: |
+            COLOR=${{ matrix.color }}
+            ERROR_RATE=${{ matrix.variant.error_rate }}
+            LATENCY=${{ matrix.variant.latency }}
