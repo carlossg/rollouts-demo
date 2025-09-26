@@ -1,3 +1,5 @@
 ./node-modules
 rollouts-demo
 .DS_STORE
+
+secret.yaml
