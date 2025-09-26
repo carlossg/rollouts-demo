@@ -56,9 +56,19 @@ Available images colors are: red, orange, yellow, green, blue, purple (e.g. `arg
 * High latency images, prefixed with the word `slow` (e.g. `argoproj/rollouts-demo:slow-yellow`)
 
 
-## Releasing
+## Automated Builds
 
-To release new images:
+Images are automatically built and pushed to GitHub Container Registry (ghcr.io) when code is pushed to the main branch. The GitHub Action workflow builds:
+
+- Main application image with various tags (latest, branch name, commit SHA)
+- Load-tester utility image
+- All color variants (red, orange, yellow, green, blue, purple) in normal, bad (high error rate), and slow (high latency) versions
+
+Images are available at: `ghcr.io/carlossg/rollouts-demo:tag`
+
+## Manual Release
+
+To manually release new images:
 
 ```bash
 make release IMAGE_NAMESPACE=argoproj DOCKER_PUSH=true
