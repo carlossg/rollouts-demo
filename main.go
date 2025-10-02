@@ -199,7 +199,7 @@ func printColor(colorToPrint string, w http.ResponseWriter, statusCode int) {
 }
 
 func randomColor() string {
-	return colors[rand.Int()%len(colors)]
+	return "green"
 }
 
 func cpuBurn(done <-chan bool, numCPUBurn string) {
