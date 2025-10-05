@@ -11,7 +11,7 @@ COPY *.ico ./
 COPY *.css ./
 COPY --from=build /go/src/app/rollouts-demo /rollouts-demo
 
-ARG COLOR
+ARG COLOR=blue
 ENV COLOR=${COLOR}
 ARG ERROR_RATE
 ENV ERROR_RATE=${ERROR_RATE}

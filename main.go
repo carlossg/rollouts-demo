@@ -184,7 +184,7 @@ func getColor(w http.ResponseWriter, r *http.Request) {
 	statusCode := http.StatusOK
 	if colorParams.Return500Probability != nil && *colorParams.Return500Probability > 0 && *colorParams.Return500Probability >= rand.Intn(100) {
 		statusCode = http.StatusInternalServerError
-	} else if envErrorRate > 0 && rand.Intn(100) >= envErrorRate {
+	} else if envErrorRate > 0 && rand.Intn(100) < envErrorRate {
 		statusCode = http.StatusInternalServerError
 	}
 	printColor(colorToReturn, w, statusCode)
