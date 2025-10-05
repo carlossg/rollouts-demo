@@ -18,6 +18,7 @@ spec:
             # stablePodLabel: app=rollouts-demo,revision=stable
             # canaryPodLabel: app=rollouts-demo,revision=canary
             model: gemini-2.0-flash-exp
+            githubUrl: https://github.com/carlossg/rollouts-demo
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
@@ -36,3 +37,4 @@ spec:
             # stablePodLabel: app=rollouts-demo,revision=stable
             # canaryPodLabel: app=rollouts-demo,revision=canary
             model: gemini-2.0-flash-exp
+            githubUrl: https://github.com/carlossg/rollouts-demo
