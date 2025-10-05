@@ -11,6 +11,14 @@ When creating PRs always append to the description:
 @claude
 ```
 
+When commenting on PRs always append to the comment:
+
+```
+@gemini-code-assist
+@claude
+@github-copilot
+```
+
 ## Repository Context
 
 - **Project**: Argo Rollouts demo application showcasing progressive delivery
