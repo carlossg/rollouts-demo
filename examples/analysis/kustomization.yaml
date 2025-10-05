@@ -7,3 +7,9 @@ resources:
 - analysis-success-rate.yaml
 - analysis-success-rate-job.yaml
 - analysis-success-rate-job-ai.yaml
+
+# Image to be replaced by Skaffold/Cloud Deploy
+images:
+- name: rollouts-demo
+  newName: mirror.gcr.io/argoproj/rollouts-demo
+  newTag: blue

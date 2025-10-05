@@ -1,0 +1,22 @@
+apiVersion: skaffold/v4beta6
+kind: Config
+metadata:
+  name: rollouts-demo
+
+# Build configuration (used for local development)
+# Cloud Build handles building in CI/CD
+build:
+  artifacts:
+  - image: rollouts-demo
+    docker:
+      dockerfile: Dockerfile
+
+# Manifest rendering with Kustomize
+manifests:
+  kustomize:
+    paths:
+    - examples/analysis
+
+# Deployment configuration
+deploy:
+  kubectl: {}
