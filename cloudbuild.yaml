@@ -1,0 +1,39 @@
+steps:
+  # Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/github/rollouts-demo:$SHORT_SHA'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/github/rollouts-demo:$BRANCH_NAME'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/github/rollouts-demo:latest'
+      - '.'
+
+  # Push the container image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '--all-tags'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/github/rollouts-demo'
+
+  # Create release in Cloud Deploy
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'deploy'
+      - 'releases'
+      - 'create'
+      - 'release-$SHORT_SHA'
+      - '--delivery-pipeline=rollouts-demo-pipeline'
+      - '--region=us-central1'
+      - '--images=rollouts-demo=us-central1-docker.pkg.dev/$PROJECT_ID/github/rollouts-demo:$SHORT_SHA'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+images:
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/github/rollouts-demo:$SHORT_SHA'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/github/rollouts-demo:$BRANCH_NAME'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/github/rollouts-demo:latest'
