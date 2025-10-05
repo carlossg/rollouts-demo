@@ -11,5 +11,5 @@ resources:
 # Image to be replaced by Skaffold/Cloud Deploy
 images:
 - name: rollouts-demo
-  newName: mirror.gcr.io/argoproj/rollouts-demo
-  newTag: blue
+  newName: us-central1-docker.pkg.dev/$PROJECT_ID/github/rollouts-demo
+  newTag: latest
