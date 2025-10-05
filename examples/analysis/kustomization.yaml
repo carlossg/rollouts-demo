@@ -9,7 +9,9 @@ resources:
 - analysis-success-rate-job-ai.yaml
 
 # Image to be replaced by Skaffold/Cloud Deploy
+# Cloud Deploy will override this with the --images flag from cloudbuild.yaml
+# to run locally, set the image to ie. argoproj/rollouts-demo:blue
 images:
 - name: rollouts-demo
-  newName: us-central1-docker.pkg.dev/$PROJECT_ID/github/rollouts-demo
+  newName: us-central1-docker.pkg.dev/api-project-642841493686/github/rollouts-demo
   newTag: latest
