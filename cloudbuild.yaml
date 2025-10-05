@@ -39,7 +39,7 @@ steps:
       - '--delivery-pipeline=rollouts-demo-pipeline'
       - '--region=us-central1'
       - '--source=.'
-      - '--images=rollouts-demo=us-central1-docker.pkg.dev/$PROJECT_ID/github/rollouts-demo:$SHORT_SHA'
+      - '--images=argoproj/rollouts-demo=us-central1-docker.pkg.dev/$PROJECT_ID/github/rollouts-demo:$SHORT_SHA'
 
 options:
   logging: CLOUD_LOGGING_ONLY
