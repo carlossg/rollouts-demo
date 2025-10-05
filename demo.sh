@@ -22,6 +22,7 @@ starship_toggle() {
 		git_status
 		directory
 		python
+		kubernetes
 	EOF
 }
 
