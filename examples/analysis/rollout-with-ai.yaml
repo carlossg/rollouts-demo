@@ -1,0 +1,67 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: canary-demo
+spec:
+  replicas: 5
+  revisionHistoryLimit: 1
+  selector:
+    matchLabels:
+      app: canary-demo
+  strategy:
+    canary:
+      analysis:
+        templates:
+        - templateName: canary-analysis-ai
+        startingStep: 1 # delay starting analysis run until setWeight: 20%
+        args:
+        - name: ingress
+          value: canary-demo
+        - name: service
+          value: canary-demo-preview
+      canaryService: canary-demo-preview
+      stableMetadata:
+        labels:
+          role: stable
+      canaryMetadata:
+        labels:
+          role: canary
+      steps:
+      - setWeight: 20
+      - pause: {}
+      - setWeight: 40
+      - pause:
+          duration: 10
+      - setWeight: 60
+      - pause:
+          duration: 10
+      - setWeight: 80
+      - pause:
+          duration: 10
+  template:
+    metadata:
+      labels:
+        app: canary-demo
+    spec:
+      containers:
+      - image: argoproj/rollouts-demo:blue
+        imagePullPolicy: Always
+        name: canary-demo
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 5m
+            memory: 32Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          privileged: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          seccompProfile:
+            type: RuntimeDefault

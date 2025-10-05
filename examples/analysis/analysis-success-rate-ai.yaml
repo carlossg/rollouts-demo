@@ -1,0 +1,38 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: canary-analysis-ai-agent
+spec:
+  metrics:
+    - name: success-rate
+      interval: 10s
+      successCondition: result > 0.50
+      provider:
+        plugin:
+          argoproj-labs/metric-ai:
+            # Use agent mode for enhanced analysis
+            analysisMode: agent
+            namespace: "{{args.namespace}}"
+            podName: "{{args.canary-pod}}"
+            # Fallback fields for default mode
+            # stablePodLabel: app=rollouts-demo,revision=stable
+            # canaryPodLabel: app=rollouts-demo,revision=canary
+            model: gemini-2.0-flash-exp
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: canary-analysis-ai
+spec:
+  metrics:
+    - name: success-rate
+      interval: 10s
+      successCondition: result > 0.50
+      provider:
+        plugin:
+          argoproj-labs/metric-ai:
+            # Use default mode (inline mode)
+            analysisMode: default
+            # stablePodLabel: app=rollouts-demo,revision=stable
+            # canaryPodLabel: app=rollouts-demo,revision=canary
+            model: gemini-2.0-flash-exp

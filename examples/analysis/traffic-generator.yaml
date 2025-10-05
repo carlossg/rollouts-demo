@@ -1,0 +1,92 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: traffic-generator-script
+data:
+  generate-traffic.sh: |
+    #!/bin/sh
+    echo "Starting traffic generator..."
+    echo "Stable service: http://canary-demo:80/color"
+    echo "Canary service: http://canary-demo-preview:80/color"
+    echo ""
+    
+    while true; do
+      # Hit stable service
+      STABLE_RESPONSE=$(curl -s -w "\n%{http_code}" http://canary-demo:80/color 2>/dev/null)
+      STABLE_CODE=$(echo "$STABLE_RESPONSE" | tail -n1)
+      STABLE_BODY=$(echo "$STABLE_RESPONSE" | head -n-1)
+      
+      if [ "$STABLE_CODE" = "200" ]; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] STABLE: $STABLE_BODY (HTTP $STABLE_CODE)"
+      else
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] STABLE: ERROR (HTTP $STABLE_CODE)"
+      fi
+      
+      # Hit canary service
+      CANARY_RESPONSE=$(curl -s -w "\n%{http_code}" http://canary-demo-preview:80/color 2>/dev/null)
+      CANARY_CODE=$(echo "$CANARY_RESPONSE" | tail -n1)
+      CANARY_BODY=$(echo "$CANARY_RESPONSE" | head -n-1)
+      
+      if [ "$CANARY_CODE" = "200" ]; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] CANARY: $CANARY_BODY (HTTP $CANARY_CODE)"
+      else
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] CANARY: ERROR (HTTP $CANARY_CODE)"
+      fi
+      
+      echo ""
+    done
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: traffic-generator
+  labels:
+    app: traffic-generator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: traffic-generator
+  template:
+    metadata:
+      labels:
+        app: traffic-generator
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: traffic-generator
+        image: curlimages/curl:8.5.0
+        command:
+          - /bin/sh
+          - /scripts/generate-traffic.sh
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          capabilities:
+            drop:
+            - ALL
+          seccompProfile:
+            type: RuntimeDefault
+        volumeMounts:
+        - name: script
+          mountPath: /scripts
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+          limits:
+            cpu: 50m
+            memory: 64Mi
+      volumes:
+      - name: script
+        configMap:
+          name: traffic-generator-script
+          defaultMode: 0755
