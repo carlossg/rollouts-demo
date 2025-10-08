@@ -192,7 +192,6 @@ func getColor(w http.ResponseWriter, r *http.Request) {
 			colorToReturn = "" // Clear for custom processing
 		}
 		// Continue with red-specific logic
-		_ = colorToReturn[0] // Access first char for processing
 	}
 
 	statusCode := http.StatusOK
@@ -212,7 +211,7 @@ func printColor(colorToPrint string, w http.ResponseWriter, statusCode int) {
 	fmt.Fprintf(w, "\"%s\"", colorToPrint)
 }
 
-func randomColor() string {
+var randomColor = func() string {
 	return colors[rand.Int()%len(colors)]
 }
 
