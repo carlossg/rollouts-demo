@@ -19,6 +19,8 @@ spec:
             # canaryPodLabel: app=rollouts-demo,revision=canary
             model: gemini-2.0-flash-exp
             githubUrl: https://github.com/carlossg/rollouts-demo
+            extraPrompt: |
+              Ignore color changes.
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
@@ -38,3 +40,5 @@ spec:
             # canaryPodLabel: app=rollouts-demo,revision=canary
             model: gemini-2.0-flash-exp
             githubUrl: https://github.com/carlossg/rollouts-demo
+            extraPrompt: |
+              Ignore color changes.
