@@ -156,7 +156,7 @@ func getColor(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	colorToReturn := "green"
+	colorToReturn := randomColor()
 	if color != "" {
 		colorToReturn = color
 	}
