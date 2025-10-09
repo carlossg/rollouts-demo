@@ -17,7 +17,7 @@ spec:
             # Fallback fields for default mode
             # stablePodLabel: app=rollouts-demo,revision=stable
             # canaryPodLabel: app=rollouts-demo,revision=canary
-            model: gemini-2.0-flash-exp
+            model: gemini-2.0-flash
             githubUrl: https://github.com/carlossg/rollouts-demo
             extraPrompt: |
               Ignore color changes.
@@ -38,7 +38,7 @@ spec:
             analysisMode: default
             # stablePodLabel: app=rollouts-demo,revision=stable
             # canaryPodLabel: app=rollouts-demo,revision=canary
-            model: gemini-2.0-flash-exp
+            model: gemini-2.0-flash
             githubUrl: https://github.com/carlossg/rollouts-demo
             extraPrompt: |
               Ignore color changes.
