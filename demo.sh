@@ -42,18 +42,6 @@ function create_cluster() {
 	else
 		echo "Cluster exists"
 	fi
-
-	ingress=canary-csanchez
-	kubectl apply -f ingress-csanchez.yaml
-
-	echo "Getting ingress ip"
-	ip=$(kubectl get ingress "${ingress}" -o jsonpath='{.status.loadBalancer.ingress[0].ip}{"\n"}')
-	while [ -z "$ip" ]; do
-		echo "Waiting for ingress to have an ip"
-		sleep 10
-		ip=$(kubectl get ingress "${ingress}" -o jsonpath='{.status.loadBalancer.ingress[0].ip}{"\n"}')
-	done
-	echo "Ingress ip: $ip"
 }
 
 function setup_permissions() {
@@ -264,6 +252,22 @@ function install_argo_rollouts() {
 	fi
 }
 
+function create_ingress() {
+	local ingress=canary-csanchez
+
+	echo "Creating ingress"
+	kubectl apply -f ingress-csanchez.yaml
+
+	echo "Getting ingress ip"
+	local ip=$(kubectl get ingress "${ingress}" -o jsonpath='{.status.loadBalancer.ingress[0].ip}{"\n"}')
+	while [ -z "$ip" ]; do
+		echo "Waiting for ingress to have an ip"
+		sleep 10
+		ip=$(kubectl get ingress "${ingress}" -o jsonpath='{.status.loadBalancer.ingress[0].ip}{"\n"}')
+	done
+	echo "Ingress ip: $ip"
+}
+
 create_cluster
 
 cloud_build_setup "${PROJECT}"
@@ -281,6 +285,9 @@ kubectl apply -k examples/analysis
 
 # scale down for now
 kubectl scale rollout.argoproj.io/canary-demo --replicas=1
+
+# Create ingress after service is ready
+create_ingress
 
 kubectl argo rollouts get rollout canary-demo
 
