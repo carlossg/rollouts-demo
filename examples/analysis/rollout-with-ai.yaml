@@ -12,7 +12,7 @@ spec:
     canary:
       analysis:
         templates:
-        - templateName: canary-analysis-ai
+        - templateName: canary-analysis-ai-agent
         startingStep: 1 # delay starting analysis run until setWeight: 20%
         args:
         - name: ingress
