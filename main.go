@@ -199,6 +199,9 @@ func printColor(colorToPrint string, w http.ResponseWriter, statusCode int) {
 }
 
 func randomColor() string {
+	if len(colors) == 0 {
+		return "blue"
+	}
 	return colors[rand.Int()%len(colors)]
 }
 
