@@ -294,7 +294,6 @@ kubectl argo rollouts get rollout canary-demo
 kubectl argo rollouts dashboard
 
 # kubectl argo rollouts set image canary-demo "*=argoproj/rollouts-demo:green"
-# kubectl argo rollouts set image canary-demo "*=argoproj/rollouts-demo:bad-red"
 # kubectl argo rollouts set image canary-demo "*=argoproj/rollouts-demo:slow-yellow"
 
 # gcloud beta container \
