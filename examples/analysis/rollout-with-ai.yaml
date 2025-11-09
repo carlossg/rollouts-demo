@@ -12,7 +12,7 @@ spec:
     canary:
       analysis:
         templates:
-        - templateName: canary-analysis-ai-agent
+        - templateName: canary-analysis-ai
         startingStep: 1 # delay starting analysis run until setWeight: 20%
       canaryService: canary-demo-preview
       stableMetadata:

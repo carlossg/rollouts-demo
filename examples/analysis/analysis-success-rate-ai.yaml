@@ -34,8 +34,8 @@ spec:
           argoproj-labs/metric-ai:
             # Use default mode (inline mode)
             analysisMode: default
-            # stablePodLabel: app=rollouts-demo,revision=stable
-            # canaryPodLabel: app=rollouts-demo,revision=canary
+            stablePodLabel: role=stable
+            canaryPodLabel: role=canary
             model: gemini-2.0-flash
             githubUrl: https://github.com/carlossg/rollouts-demo
             extraPrompt: |
