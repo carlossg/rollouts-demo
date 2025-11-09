@@ -10,17 +10,15 @@ spec:
       provider:
         plugin:
           argoproj-labs/metric-ai:
-            # Use agent mode for enhanced analysis
+            # Use agent mode - agent fetches logs using its own tools
             analysisMode: agent
-            namespace: "{{args.namespace}}"
-            podName: "{{args.canary-pod}}"
-            # Fallback fields for default mode
-            # stablePodLabel: app=rollouts-demo,revision=stable
-            # canaryPodLabel: app=rollouts-demo,revision=canary
-            model: gemini-2.0-flash
+            # Pod selectors for agent to fetch logs
+            stableLabel: role=stable
+            canaryLabel: role=canary
+            # Required: Agent URL (must be explicitly configured)
+            agentUrl: http://kubernetes-agent.argo-rollouts.svc.cluster.local:8080
+            # Optional: Create GitHub issues on canary failures
             githubUrl: https://github.com/carlossg/rollouts-demo
-            extraPrompt: |
-              Ignore color changes.
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
