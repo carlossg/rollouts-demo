@@ -77,6 +77,7 @@ func main() {
 	router := http.NewServeMux()
 	router.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir("./"))))
 	router.HandleFunc("/color", getColor)
+	router.HandleFunc("/healthz", healthz)
 
 	server := &http.Server{
 		Addr:    listenAddr,
@@ -114,8 +115,9 @@ func main() {
 		close(done)
 	}()
 
-	cpuBurn(done, numCPUBurn)
+	// cpuBurn(done, numCPUBurn)
 	log.Printf("Started server on %s", listenAddr)
+	log.Printf("COLOR=%s, ERROR_RATE=%d, LATENCY=%f", color, envErrorRate, envLatency)
 	var err error
 	if tls {
 		err = server.ListenAndServeTLS("", "")
@@ -189,6 +191,10 @@ func getColor(w http.ResponseWriter, r *http.Request) {
 	}
 	printColor(colorToReturn, w, statusCode)
 	log.Printf("%d - %s%s\n", statusCode, colorToReturn, delayLengthStr)
+}
+
+func healthz(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
 }
 
 func printColor(colorToPrint string, w http.ResponseWriter, statusCode int) {
