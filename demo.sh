@@ -283,9 +283,6 @@ echo "Creating the rollout"
 kubectl apply -k examples/analysis
 # skaffold apply
 
-# scale down for now
-kubectl scale rollout.argoproj.io/canary-demo --replicas=1
-
 # Create ingress after service is ready
 create_ingress
 
