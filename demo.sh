@@ -30,7 +30,7 @@ function create_cluster() {
 	# create cluster if it doesn't exist
 	if ! gcloud container clusters get-credentials "${CLUSTER_NAME}" --region us-central1; then
 		echo "Creating cluster"
-		gcloud beta container \
+		gcloud container \
 			--project "${PROJECT}" \
 			clusters create-auto "${CLUSTER_NAME}" \
 			--region "us-central1"
@@ -297,7 +297,7 @@ kubectl argo rollouts dashboard
 # kubectl argo rollouts set image canary-demo "*=argoproj/rollouts-demo:bad-red"
 # kubectl argo rollouts set image canary-demo "*=argoproj/rollouts-demo:slow-yellow"
 
-# gcloud beta container \
+# gcloud container \
 # 	--project "${PROJECT}" \
 # 	clusters delete "${CLUSTER_NAME}" \
 # 	--region "us-central1"
