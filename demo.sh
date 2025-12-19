@@ -248,7 +248,7 @@ function install_argo_rollouts() {
 			kubectl apply -n argo-rollouts -k rollouts-plugin-metric-ai/config/argo-rollouts
 			popd >/dev/null
 		fi
-		kubectl apply -n argo-rollouts -f https://github.com/argoproj/argo-rollouts/releases/download/v1.8.3/install.yaml
+		# kubectl apply -n argo-rollouts -f https://github.com/argoproj/argo-rollouts/releases/download/v1.8.3/install.yaml
 	fi
 }
 
@@ -266,6 +266,20 @@ function create_ingress() {
 		ip=$(kubectl get ingress "${ingress}" -o jsonpath='{.status.loadBalancer.ingress[0].ip}{"\n"}')
 	done
 	echo "Ingress ip: $ip"
+}
+
+function install_kubernetes_agent() {
+	echo "Installing Kubernetes Agent"
+	if [ -d ../../carlossg/argo-rollouts/kubernetes-agent/ ]; then
+		echo "Installing Kubernetes Agent from local path"
+		kubectl apply -n argo-rollouts -k ../../carlossg/argo-rollouts/kubernetes-agent/config/argo-rollouts
+	else
+		echo "Installing Kubernetes Agent from github"
+		pushd "$TMPDIR" >/dev/null
+		git clone https://github.com/carlossg/argo-rollouts-kubernetes-agent.git
+		kubectl apply -n argo-rollouts -k argo-rollouts-kubernetes-agent/config/argo-rollouts
+		popd >/dev/null
+	fi
 }
 
 create_cluster
@@ -288,6 +302,9 @@ kubectl scale rollout.argoproj.io/canary-demo --replicas=1
 
 # Create ingress after service is ready
 create_ingress
+
+# Install the kubernetes agent
+install_kubernetes_agent
 
 kubectl argo rollouts get rollout canary-demo
 
