@@ -19,6 +19,9 @@ spec:
             agentUrl: http://kubernetes-agent.argo-rollouts.svc.cluster.local:8080
             # Optional: Create GitHub issues on canary failures
             githubUrl: https://github.com/carlossg/rollouts-demo
+            extraPrompt: |
+              Ignore color changes. 
+              Consider LoadBalancerNegNotReady a temporary condition, not an error.
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate

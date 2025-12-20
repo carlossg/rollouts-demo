@@ -13,7 +13,7 @@ spec:
       analysis:
         templates:
         - templateName: canary-analysis-ai-agent
-        startingStep: 1 # delay starting analysis run until setWeight: 20%
+        startingStep: 2 # delay starting analysis run until setWeight: 20%
       canaryService: canary-demo-preview
       stableMetadata:
         labels:
@@ -47,6 +47,25 @@ spec:
         - containerPort: 8080
           name: http
           protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 1
+          successThreshold: 1
+          failureThreshold: 3
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 1
+          failureThreshold: 3
         resources:
           requests:
             cpu: 5m
