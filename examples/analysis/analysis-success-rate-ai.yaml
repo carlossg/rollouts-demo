@@ -21,7 +21,7 @@ spec:
             githubUrl: https://github.com/carlossg/rollouts-demo
             extraPrompt: |
               Ignore color changes. 
-              Consider LoadBalancerNegNotReady a temporary condition, not an error.
+              Consider LoadBalancerNegNotReady and 'NEG is not attached to any BackendService with health checking a temporary condition', not an error.
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
