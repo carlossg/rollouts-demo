@@ -1,12 +1,14 @@
 #!/bin/bash -eu
 
 PROJECT="${1:-}"
+INSTALL_GEMMA="${INSTALL_GEMMA:-false}" # Set to 'true' to install Gemma server
 
 if [ -z "${PROJECT}" ]; then
 	PROJECT=$(gcloud config get-value project)
 fi
 
 CLUSTER_NAME="autopilot-cluster-1"
+DEMO_LABEL="demo=argo-rollouts"
 
 starship_toggle() {
 	cat <<-EOF | while read -r module; do starship toggle "$module"; done
@@ -29,16 +31,15 @@ starship_toggle() {
 function create_cluster() {
 	# create cluster if it doesn't exist
 	if ! gcloud container clusters get-credentials "${CLUSTER_NAME}" --region us-central1; then
-		echo "Creating cluster"
+		echo "Creating Autopilot cluster"
+
+		# Create Autopilot cluster (supports GPU workloads automatically)
+		# See: https://cloud.google.com/kubernetes-engine/docs/how-to/autopilot-gpus
 		gcloud container \
 			--project "${PROJECT}" \
 			clusters create-auto "${CLUSTER_NAME}" \
-			--region "us-central1"
-	# --release-channel "regular" \
-	# --network "projects/${PROJECT}/global/networks/default" \
-	# --subnetwork "projects/${PROJECT}/regions/us-central1/subnetworks/default" \
-	# --cluster-ipv4-cidr "/17" \
-	# --binauthz-evaluation-mode=DISABLED
+			--region "us-central1" \
+			--labels="${DEMO_LABEL}"
 	else
 		echo "Cluster exists"
 	fi
@@ -141,7 +142,8 @@ function cloud_build_setup() {
 			--branch-pattern="^main$" \
 			--build-config="cloudbuild.yaml" \
 			--region="${trigger_region}" \
-			--project="${project}" 2>&1; then
+			--project="${project}" \
+			--labels="${DEMO_LABEL}" 2>&1; then
 
 			echo "✓ Trigger created successfully!"
 			trigger_id=$(gcloud builds triggers describe "${trigger_name}" \
@@ -238,9 +240,11 @@ function install_argo_rollouts() {
 	if ! kubectl get namespace argo-rollouts; then
 		echo "Installing Argo Rollouts"
 		kubectl create namespace argo-rollouts
-		if [ -d ../../carlossg/argo-rollouts/rollouts-plugin-metric-ai/ ]; then
+	fi
+	if ! kubectl get deployment/argo-rollouts -n argo-rollouts; then
+		if [ -d ../rollouts-plugin-metric-ai/ ]; then
 			echo "Installing Argo Rollouts Plugin Metric AI from local path"
-			kubectl apply -n argo-rollouts -k ../../carlossg/argo-rollouts/rollouts-plugin-metric-ai/config/argo-rollouts
+			kubectl apply -n argo-rollouts -k ../rollouts-plugin-metric-ai/config/argo-rollouts
 		else
 			echo "Installing Argo Rollouts Plugin Metric AI from github"
 			pushd "$TMPDIR" >/dev/null
@@ -270,16 +274,120 @@ function create_ingress() {
 
 function install_kubernetes_agent() {
 	echo "Installing Kubernetes Agent"
-	if [ -d ../../carlossg/argo-rollouts/kubernetes-agent/ ]; then
+	local local_path
+	local_path="$(dirname "$(pwd)")/kubernetes-agent/"
+	if [ -d "${local_path}" ]; then
 		echo "Installing Kubernetes Agent from local path"
-		kubectl apply -n argo-rollouts -k ../../carlossg/argo-rollouts/kubernetes-agent/config/argo-rollouts
+		kubectl apply -n argo-rollouts -k "${local_path}/deployment"
 	else
-		echo "Installing Kubernetes Agent from github"
+		echo "Installing Kubernetes Agent from github because ${local_path} doesn't exist"
 		pushd "$TMPDIR" >/dev/null
-		git clone https://github.com/carlossg/argo-rollouts-kubernetes-agent.git
-		kubectl apply -n argo-rollouts -k argo-rollouts-kubernetes-agent/config/argo-rollouts
+		git clone https://github.com/carlossg/kubernetes-agent.git
+		kubectl apply -n argo-rollouts -k kubernetes-agent/deployment
 		popd >/dev/null
 	fi
+}
+
+function install_gemma() {
+	echo "Installing Gemma model server in Kubernetes"
+
+	# Create namespace if it doesn't exist
+	kubectl create namespace gemma-system --dry-run=client -o yaml | kubectl apply -f -
+
+	# Check if deployment manifest exists locally
+	local gemma_manifest=""
+	set -x
+	if [ -d "$(dirname "$(pwd)")/kubernetes-agent/" ]; then
+		gemma_manifest="$(dirname "$(pwd)")/kubernetes-agent/deployment/gemma"
+	fi
+
+	if [ -n "${gemma_manifest}" ] && [ -d "${gemma_manifest}" ]; then
+		echo "Deploying Gemma from local manifests"
+		kubectl apply -k "${gemma_manifest}"
+	else
+		echo "Gemma deployment manifests not found"
+		echo "Please ensure the gemma deployment directory exists at kubernetes-agent/deployment/gemma"
+		return 1
+	fi
+
+	echo "Waiting for Gemma deployment to be ready..."
+	kubectl wait --for=condition=available --timeout=600s \
+		deployment/gemma-server -n gemma-system || true
+
+	echo "Gemma server deployed successfully"
+	echo "Service endpoint: http://gemma-server.gemma-system.svc.cluster.local:8000"
+}
+
+function scale_down() {
+	echo "========================================="
+	echo "Scaling Down Demo Environment"
+	echo "========================================="
+	echo ""
+
+	# Save current replica counts before scaling down
+	echo "Saving current replica counts..."
+	kubectl get rollout canary-demo -o jsonpath='{.spec.replicas}' > /tmp/canary-demo-replicas.txt 2>/dev/null || echo "1" > /tmp/canary-demo-replicas.txt
+	kubectl get deployment/kubernetes-agent -n argo-rollouts -o jsonpath='{.spec.replicas}' > /tmp/k8s-agent-replicas.txt 2>/dev/null || echo "1" > /tmp/k8s-agent-replicas.txt
+	kubectl get deployment/gemma-server -n gemma-system -o jsonpath='{.spec.replicas}' > /tmp/gemma-replicas.txt 2>/dev/null || echo "1" > /tmp/gemma-replicas.txt
+
+	echo "Scaling canary-demo rollout to 0..."
+	kubectl scale rollout.argoproj.io/canary-demo --replicas=0 || echo "  ⚠️  canary-demo rollout not found"
+
+	echo "Scaling kubernetes-agent to 0..."
+	kubectl scale deployment/kubernetes-agent -n argo-rollouts --replicas=0 || echo "  ⚠️  kubernetes-agent not found"
+
+	echo "Scaling gemma-server to 0..."
+	kubectl scale deployment/gemma-server -n gemma-system --replicas=0 2>/dev/null || echo "  ⚠️  gemma-server not found"
+
+	echo "Scaling argo-rollouts to 0..."
+	kubectl scale deployment/argo-rollouts -n argo-rollouts --replicas=0 2>/dev/null || echo "  ⚠️  argo-rollouts not found"
+
+	echo "Scaling traffic-generator to 0..."
+	kubectl scale deployment/traffic-generator -n default --replicas=0 2>/dev/null || echo "  ⚠️  traffic-generator not found"
+
+	echo ""
+	echo "✓ All demo components scaled down to 0"
+	echo ""
+	echo "Note: Argo Rollouts controller is still running (not scaled down)"
+	echo "      Use 'kubectl scale deployment/argo-rollouts -n argo-rollouts --replicas=0' to scale it down too"
+	echo ""
+}
+
+function scale_up() {
+	echo "========================================="
+	echo "Scaling Up Demo Environment"
+	echo "========================================="
+	echo ""
+
+	# Read saved replica counts (default to 1 if files don't exist)
+
+	echo "Scaling canary-demo rollout to 1..."
+	kubectl scale rollout.argoproj.io/canary-demo --replicas="1" || echo "  ⚠️  canary-demo rollout not found"
+
+	echo "Scaling kubernetes-agent to 1..."
+	kubectl scale deployment/kubernetes-agent -n argo-rollouts --replicas=1 || echo "  ⚠️  kubernetes-agent not found"
+
+	echo "Saling argo-rollouts to 1..."
+	kubectl scale deployment/argo-rollouts -n argo-rollouts --replicas=1 || echo "  ⚠️  argo-rollouts not found"
+
+	echo "Scaling traffic-generator to 1..."
+	kubectl scale deployment/traffic-generator -n default --replicas=1 || echo "  ⚠️  traffic-generator not found"
+
+	if kubectl get deployment/gemma-server -n gemma-system &>/dev/null; then
+		echo "Scaling gemma-server to 1..."
+		kubectl scale deployment/gemma-server -n gemma-system --replicas=1 || echo "  ⚠️  gemma-server not found"
+	else
+		echo "  ℹ  gemma-server not deployed, skipping"
+	fi
+
+	echo ""
+	echo "✓ All demo components scaled back up"
+	echo ""
+	echo "Waiting for pods to be ready..."
+	kubectl wait --for=condition=ready pod -l app=canary-demo --timeout=120s 2>/dev/null || echo "  ⚠️  canary-demo pods not ready yet"
+	kubectl wait --for=condition=ready pod -l app=kubernetes-agent -n argo-rollouts --timeout=120s 2>/dev/null || echo "  ⚠️  kubernetes-agent pod not ready yet"
+	kubectl wait --for=condition=ready pod -l app=gemma-server -n gemma-system --timeout=300s 2>/dev/null || echo "  ℹ  gemma-server pod not ready yet (or not deployed)"
+	echo ""
 }
 
 create_cluster
@@ -288,10 +396,10 @@ cloud_build_setup "${PROJECT}"
 
 install_argo_rollouts
 
-# change argo-rollouts image to ghcr.io/carlossg/rollouts-plugin-metric-ai
+# change argo-rollouts image to ghcr.io/argoproj-labs/rollouts-plugin-metric-ai
 kubectl set image -n argo-rollouts \
 	deployment/argo-rollouts \
-	argo-rollouts=ghcr.io/carlossg/rollouts-plugin-metric-ai
+	argo-rollouts=ghcr.io/argoproj-labs/rollouts-plugin-metric-ai
 
 echo "Creating the rollout"
 kubectl apply -k examples/analysis
@@ -302,6 +410,11 @@ kubectl scale rollout.argoproj.io/canary-demo --replicas=1
 
 # Create ingress after service is ready
 create_ingress
+
+# Install Gemma if requested
+if [ "${INSTALL_GEMMA}" = "true" ]; then
+	install_gemma
+fi
 
 # Install the kubernetes agent
 install_kubernetes_agent
@@ -314,7 +427,12 @@ kubectl argo rollouts dashboard
 # kubectl argo rollouts set image canary-demo "*=argoproj/rollouts-demo:bad-red"
 # kubectl argo rollouts set image canary-demo "*=argoproj/rollouts-demo:slow-yellow"
 
+# Scale down all components (useful for saving costs when not in use)
+# scale_down
+
+# Scale back up all components
+# scale_up
+
 # gcloud container \
-# 	--project "${PROJECT}" \
 # 	clusters delete "${CLUSTER_NAME}" \
 # 	--region "us-central1"
