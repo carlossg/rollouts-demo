@@ -248,7 +248,7 @@ function install_argo_rollouts() {
 		else
 			echo "Installing Argo Rollouts Plugin Metric AI from github"
 			pushd "$TMPDIR" >/dev/null
-			git clone https://github.com/carlossg/rollouts-plugin-metric-ai.git
+			git clone https://github.com/argoproj-labs/rollouts-plugin-metric-ai.git
 			kubectl apply -n argo-rollouts -k rollouts-plugin-metric-ai/config/argo-rollouts
 			popd >/dev/null
 		fi
@@ -324,32 +324,20 @@ function scale_down() {
 	echo "========================================="
 	echo ""
 
-	# Save current replica counts before scaling down
-	echo "Saving current replica counts..."
-	kubectl get rollout canary-demo -o jsonpath='{.spec.replicas}' > /tmp/canary-demo-replicas.txt 2>/dev/null || echo "1" > /tmp/canary-demo-replicas.txt
-	kubectl get deployment/kubernetes-agent -n argo-rollouts -o jsonpath='{.spec.replicas}' > /tmp/k8s-agent-replicas.txt 2>/dev/null || echo "1" > /tmp/k8s-agent-replicas.txt
-	kubectl get deployment/gemma-server -n gemma-system -o jsonpath='{.spec.replicas}' > /tmp/gemma-replicas.txt 2>/dev/null || echo "1" > /tmp/gemma-replicas.txt
+	echo "Scaling all rollouts to 0..."
+	kubectl scale rollout --all --replicas=0 || echo "  ⚠️  rollouts not found"
 
-	echo "Scaling canary-demo rollout to 0..."
-	kubectl scale rollout.argoproj.io/canary-demo --replicas=0 || echo "  ⚠️  canary-demo rollout not found"
+	echo "Scaling all deployments in default namespace to 0..."
+	kubectl scale deployment --all -n default --replicas=0 || echo "  ⚠️  deployments not found"
 
-	echo "Scaling kubernetes-agent to 0..."
-	kubectl scale deployment/kubernetes-agent -n argo-rollouts --replicas=0 || echo "  ⚠️  kubernetes-agent not found"
+	echo "Scaling all deployments in argo-rollouts namespace to 0..."
+	kubectl scale deployment --all -n argo-rollouts --replicas=0 || echo "  ⚠️  deployments not found"
 
-	echo "Scaling gemma-server to 0..."
-	kubectl scale deployment/gemma-server -n gemma-system --replicas=0 2>/dev/null || echo "  ⚠️  gemma-server not found"
-
-	echo "Scaling argo-rollouts to 0..."
-	kubectl scale deployment/argo-rollouts -n argo-rollouts --replicas=0 2>/dev/null || echo "  ⚠️  argo-rollouts not found"
-
-	echo "Scaling traffic-generator to 0..."
-	kubectl scale deployment/traffic-generator -n default --replicas=0 2>/dev/null || echo "  ⚠️  traffic-generator not found"
+	echo "Scaling all deployments in gemma-system namespace to 0..."
+	kubectl scale deployment --all -n gemma-system --replicas=0 || echo "  ⚠️  deployments not found"
 
 	echo ""
 	echo "✓ All demo components scaled down to 0"
-	echo ""
-	echo "Note: Argo Rollouts controller is still running (not scaled down)"
-	echo "      Use 'kubectl scale deployment/argo-rollouts -n argo-rollouts --replicas=0' to scale it down too"
 	echo ""
 }
 
@@ -361,24 +349,17 @@ function scale_up() {
 
 	# Read saved replica counts (default to 1 if files don't exist)
 
-	echo "Scaling canary-demo rollout to 1..."
-	kubectl scale rollout.argoproj.io/canary-demo --replicas="1" || echo "  ⚠️  canary-demo rollout not found"
+	echo "Scaling all rollouts to 1..."
+	kubectl scale rollout --all --replicas=1 || echo "  ⚠️  rollouts not found"
 
-	echo "Scaling kubernetes-agent to 1..."
-	kubectl scale deployment/kubernetes-agent -n argo-rollouts --replicas=1 || echo "  ⚠️  kubernetes-agent not found"
+	echo "Scaling all deployments in default namespace to 1..."
+	kubectl scale deployment --all -n default --replicas=1 || echo "  ⚠️  deployments not found"
 
-	echo "Saling argo-rollouts to 1..."
-	kubectl scale deployment/argo-rollouts -n argo-rollouts --replicas=1 || echo "  ⚠️  argo-rollouts not found"
+	echo "Scaling all deployments in argo-rollouts namespace to 1..."
+	kubectl scale deployment --all -n argo-rollouts --replicas=1 || echo "  ⚠️  deployments not found"
 
-	echo "Scaling traffic-generator to 1..."
-	kubectl scale deployment/traffic-generator -n default --replicas=1 || echo "  ⚠️  traffic-generator not found"
-
-	if kubectl get deployment/gemma-server -n gemma-system &>/dev/null; then
-		echo "Scaling gemma-server to 1..."
-		kubectl scale deployment/gemma-server -n gemma-system --replicas=1 || echo "  ⚠️  gemma-server not found"
-	else
-		echo "  ℹ  gemma-server not deployed, skipping"
-	fi
+	echo "Scaling all deployments in gemma-system namespace to 1..."
+	kubectl scale deployment --all -n gemma-system --replicas=1 || echo "  ⚠️  deployments not found"
 
 	echo ""
 	echo "✓ All demo components scaled back up"
