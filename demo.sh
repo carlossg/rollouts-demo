@@ -288,11 +288,50 @@ function install_kubernetes_agent() {
 	fi
 }
 
+function check_huggingface_secret() {
+	echo "Checking for huggingface-secret..."
+	
+	# Check if secret exists in gemma-system namespace
+	if kubectl get secret huggingface-secret -n gemma-system &>/dev/null; then
+		echo "✓ huggingface-secret exists"
+		return 0
+	else
+		echo ""
+		echo "❌ ERROR: huggingface-secret not found in gemma-system namespace"
+		echo ""
+		echo "📝 To create the huggingface-secret, follow these steps:"
+		echo ""
+		echo "1. Get your Hugging Face token:"
+		echo "   - Visit: https://huggingface.co/settings/tokens"
+		echo "   - Create a new token with 'Read' permissions"
+		echo ""
+		echo "2. Accept the Gemma model license:"
+		echo "   - Visit: https://huggingface.co/google/gemma-2-2b-it"
+		echo "   - Accept the license agreement"
+		echo ""
+		echo "3. Create the secret:"
+		echo ""
+		echo "   kubectl create secret generic huggingface-secret \\"
+		echo "     --from-literal=token=YOUR_HUGGINGFACE_TOKEN_HERE \\"
+		echo "     --namespace=gemma-system"
+		echo ""
+		echo "After creating the secret, re-run this script."
+		echo ""
+		return 1
+	fi
+}
+
 function install_gemma() {
 	echo "Installing Gemma model server in Kubernetes"
 
 	# Create namespace if it doesn't exist
 	kubectl create namespace gemma-system --dry-run=client -o yaml | kubectl apply -f -
+
+	# Check for huggingface-secret before proceeding
+	if ! check_huggingface_secret; then
+		echo "Aborting Gemma installation due to missing huggingface-secret"
+		return 1
+	fi
 
 	# Check if deployment manifest exists locally
 	local gemma_manifest=""
