@@ -4,6 +4,7 @@ metadata:
   name: argo-rollouts
   namespace: argo-rollouts
 spec:
+  namespaceScoped: true
   plugins:
     metric:
       - name: argoproj-labs/metric-ai

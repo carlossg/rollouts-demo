@@ -237,7 +237,9 @@ function cloud_build_setup() {
 }
 
 function install_argo_rollouts() {
-	local operator_url="https://github.com/argoproj-labs/argo-rollouts-manager/releases/download/v0.0.8/install.yaml"
+	local operator_kustomize_url="github.com/argoproj-labs/argo-rollouts-manager//config/default?ref=v0.0.8"
+	local operator_ns="argo-rollouts-manager-system"
+	local operator_deployment="argo-rollouts-manager-controller-manager"
 	local script_dir
 	script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -245,11 +247,11 @@ function install_argo_rollouts() {
 
 	if ! kubectl get deployment/argo-rollouts -n argo-rollouts &>/dev/null; then
 		echo "Installing argo-rollouts-manager operator"
-		kubectl apply -f "${operator_url}"
+		kubectl apply -k "${operator_kustomize_url}"
 
 		echo "Waiting for argo-rollouts-manager operator to be ready"
-		kubectl wait deployment/argo-rollouts-manager \
-			--for=condition=Available -n argo-rollouts --timeout=3m
+		kubectl wait "deployment/${operator_deployment}" \
+			--for=condition=Available -n "${operator_ns}" --timeout=3m
 
 		echo "Applying RolloutManager CR (upstream image + plugin binary download)"
 		kubectl apply -f "${script_dir}/rolloutmanager.yaml"
