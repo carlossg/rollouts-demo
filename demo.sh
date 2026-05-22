@@ -237,22 +237,28 @@ function cloud_build_setup() {
 }
 
 function install_argo_rollouts() {
-	if ! kubectl get namespace argo-rollouts; then
-		echo "Installing Argo Rollouts"
-		kubectl create namespace argo-rollouts
-	fi
-	if ! kubectl get deployment/argo-rollouts -n argo-rollouts; then
-		if [ -d ../rollouts-plugin-metric-ai/ ]; then
-			echo "Installing Argo Rollouts Plugin Metric AI from local path"
-			kubectl apply -n argo-rollouts -k ../rollouts-plugin-metric-ai/config/argo-rollouts
-		else
-			echo "Installing Argo Rollouts Plugin Metric AI from github"
-			pushd "$TMPDIR" >/dev/null
-			git clone https://github.com/argoproj-labs/rollouts-plugin-metric-ai.git
-			kubectl apply -n argo-rollouts -k rollouts-plugin-metric-ai/config/argo-rollouts
-			popd >/dev/null
-		fi
-		# kubectl apply -n argo-rollouts -f https://github.com/argoproj/argo-rollouts/releases/download/v1.8.3/install.yaml
+	local operator_url="https://github.com/argoproj-labs/argo-rollouts-manager/releases/download/v0.0.8/install.yaml"
+	local script_dir
+	script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+	kubectl create namespace argo-rollouts --dry-run=client -o yaml | kubectl apply -f -
+
+	if ! kubectl get deployment/argo-rollouts -n argo-rollouts &>/dev/null; then
+		echo "Installing argo-rollouts-manager operator"
+		kubectl apply -f "${operator_url}"
+
+		echo "Waiting for argo-rollouts-manager operator to be ready"
+		kubectl wait deployment/argo-rollouts-manager \
+			--for=condition=Available -n argo-rollouts --timeout=3m
+
+		echo "Applying RolloutManager CR (upstream image + plugin binary download)"
+		kubectl apply -f "${script_dir}/rolloutmanager.yaml"
+
+		echo "Waiting for argo-rollouts deployment to be ready"
+		kubectl wait deployment/argo-rollouts \
+			--for=condition=Available -n argo-rollouts --timeout=5m
+	else
+		echo "Argo Rollouts already installed"
 	fi
 }
 
@@ -415,11 +421,6 @@ create_cluster
 cloud_build_setup "${PROJECT}"
 
 install_argo_rollouts
-
-# change argo-rollouts image to ghcr.io/argoproj-labs/rollouts-plugin-metric-ai
-kubectl set image -n argo-rollouts \
-	deployment/argo-rollouts \
-	argo-rollouts=ghcr.io/argoproj-labs/rollouts-plugin-metric-ai
 
 echo "Creating the rollout"
 kubectl apply -k examples/analysis
