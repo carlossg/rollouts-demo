@@ -39,7 +39,8 @@ function create_cluster() {
 			--project "${PROJECT}" \
 			clusters create-auto "${CLUSTER_NAME}" \
 			--region "us-central1" \
-			--labels="${DEMO_LABEL}"
+			--labels="${DEMO_LABEL}" \
+			--enable-agent-sandbox
 	else
 		echo "Cluster exists"
 	fi
@@ -281,17 +282,18 @@ function create_ingress() {
 }
 
 function install_kubernetes_agent() {
-	echo "Installing Kubernetes Agent"
+	local repo=kubernetes-agents-antigravity
+	echo "Installing Kubernetes Agents: $repo"
 	local local_path
-	local_path="$(dirname "$(pwd)")/kubernetes-agent/"
+	local_path="$(dirname "$(pwd)")/$repo/"
 	if [ -d "${local_path}" ]; then
-		echo "Installing Kubernetes Agent from local path"
-		kubectl apply -n argo-rollouts -k "${local_path}/deployment"
+		echo "Installing Kubernetes Agents from local path"
+		kubectl apply -n argo-rollouts -k "${local_path}/k8s"
 	else
-		echo "Installing Kubernetes Agent from github because ${local_path} doesn't exist"
+		echo "Installing Kubernetes Agents from github because ${local_path} doesn't exist"
 		pushd "$TMPDIR" >/dev/null
-		git clone https://github.com/carlossg/kubernetes-agent.git
-		kubectl apply -n argo-rollouts -k kubernetes-agent/deployment
+		git clone https://github.com/carlossg/$repo.git
+		kubectl apply -n argo-rollouts -k $repo/k8s
 		popd >/dev/null
 	fi
 }
