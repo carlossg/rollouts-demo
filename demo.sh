@@ -238,11 +238,11 @@ function cloud_build_setup() {
 }
 
 function install_argo_rollouts() {
-	local operator_kustomize_url="github.com/argoproj-labs/argo-rollouts-manager//config/default?ref=v0.0.8"
-	local operator_ns="argo-rollouts-manager-system"
-	local operator_deployment="argo-rollouts-manager-controller-manager"
 	local script_dir
 	script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+	local operator_kustomize_url="${script_dir}/../argo-rollouts-manager/config/default"
+	local operator_ns="argo-rollouts-manager-system"
+	local operator_deployment="argo-rollouts-manager-controller-manager"
 
 	kubectl create namespace argo-rollouts --dry-run=client -o yaml | kubectl apply -f -
 
@@ -250,12 +250,26 @@ function install_argo_rollouts() {
 		echo "Installing argo-rollouts-manager operator"
 		kubectl apply -k "${operator_kustomize_url}"
 
+		echo "Patching operator image to use public registry"
+		kubectl set image -n "${operator_ns}" "deployment/${operator_deployment}" \
+			manager=csanchez/argo-rollouts-manager:latest-amd64
+		kubectl set env -n "${operator_ns}" "deployment/${operator_deployment}" \
+			CLUSTER_SCOPED_ARGO_ROLLOUTS_NAMESPACES=argo-rollouts
+
+		echo "Applying operator RBAC patches"
+		kubectl apply -f "${script_dir}/operator-rbac-patch.yaml"
+
 		echo "Waiting for argo-rollouts-manager operator to be ready"
 		kubectl wait "deployment/${operator_deployment}" \
 			--for=condition=Available -n "${operator_ns}" --timeout=3m
 
 		echo "Applying RolloutManager CR (upstream image + plugin binary download)"
 		kubectl apply -f "${script_dir}/rolloutmanager.yaml"
+
+		echo "Waiting for argo-rollouts deployment to be created"
+		until kubectl get deployment/argo-rollouts -n argo-rollouts &>/dev/null; do
+			sleep 2
+		done
 
 		echo "Waiting for argo-rollouts deployment to be ready"
 		kubectl wait deployment/argo-rollouts \
