@@ -8,6 +8,7 @@ spec:
       interval: 10s
       initialDelay: 15s
       successCondition: result > 0.50
+      consecutiveErrorLimit: 0
       provider:
         plugin:
           argoproj-labs/metric-ai:
@@ -33,6 +34,7 @@ spec:
     - name: success-rate
       interval: 10s
       successCondition: result > 0.50
+      consecutiveErrorLimit: 0
       provider:
         plugin:
           argoproj-labs/metric-ai:
