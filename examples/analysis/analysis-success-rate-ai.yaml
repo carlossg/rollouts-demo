@@ -6,6 +6,7 @@ spec:
   metrics:
     - name: success-rate
       interval: 10s
+      initialDelay: 15s
       successCondition: result > 0.50
       provider:
         plugin:
@@ -16,12 +17,12 @@ spec:
             stableLabel: role=stable
             canaryLabel: role=canary
             # Required: Agent URL (must be explicitly configured)
-            agentUrl: http://kubernetes-agent.argo-rollouts.svc.cluster.local:8080
+            agentUrl: http://kubernetes-agent-orchestrator.argo-rollouts.svc.cluster.local:8080
             # Optional: Create GitHub issues on canary failures
             githubUrl: https://github.com/carlossg/rollouts-demo
             extraPrompt: |
               Ignore color changes. 
-              Consider LoadBalancerNegNotReady and 'NEG is not attached to any BackendService with health checking a temporary condition', not an error.
+              Consider LoadBalancerNegNotReady, LoadBalancerNegWithoutHealthCheck, FailedScheduling, and temporary readiness/liveness probe failures (e.g. connection refused during startup) as normal temporary rollout conditions, not errors.
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate

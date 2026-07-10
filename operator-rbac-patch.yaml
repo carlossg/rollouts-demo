@@ -22,3 +22,25 @@ subjects:
   - kind: ServiceAccount
     name: argo-rollouts-manager-controller-manager
     namespace: argo-rollouts-manager-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: argo-rollouts-controller-patch
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "pods/log"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: argo-rollouts-controller-patch-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: argo-rollouts-controller-patch
+subjects:
+  - kind: ServiceAccount
+    name: argo-rollouts
+    namespace: argo-rollouts

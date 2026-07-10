@@ -8,4 +8,4 @@ spec:
   plugins:
     metric:
       - name: argoproj-labs/metric-ai
-        location: https://github.com/argoproj-labs/rollouts-plugin-metric-ai/releases/download/v1.9.0/rollouts-plugin-metric-ai-linux-amd64
+        location: https://storage.googleapis.com/api-project-642841493686_cloudbuild/rollouts-plugin-metric-ai-linux-amd64
