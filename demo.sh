@@ -300,6 +300,13 @@ function install_kubernetes_agent() {
 	echo "Installing Kubernetes Agents: $repo"
 	local local_path
 	local_path="$(dirname "$(pwd)")/$repo/"
+
+	echo "Creating secret 'argo-rollouts-secret'..."
+	kubectl create secret generic argo-rollouts-secret \
+		--namespace=argo-rollouts \
+		--from-literal=GEMINI_API_KEY="${GEMINI_API_KEY:-}" \
+		--dry-run=client -o yaml | kubectl apply -f -
+
 	if [ -d "${local_path}" ]; then
 		echo "Installing Kubernetes Agents from local path"
 		kubectl apply -n argo-rollouts -k "${local_path}/k8s"
