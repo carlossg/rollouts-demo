@@ -252,7 +252,7 @@ function install_argo_rollouts() {
 
 		echo "Patching operator image to use public registry"
 		kubectl set image -n "${operator_ns}" "deployment/${operator_deployment}" \
-			manager=csanchez/argo-rollouts-manager:latest-amd64
+			manager=csanchez/argo-rollouts-manager@sha256:ead150e30c6529572d33c7437810758b3576227b71d5a12e533a7619c0751b80
 		kubectl set env -n "${operator_ns}" "deployment/${operator_deployment}" \
 			CLUSTER_SCOPED_ARGO_ROLLOUTS_NAMESPACES=argo-rollouts
 
@@ -267,8 +267,15 @@ function install_argo_rollouts() {
 		kubectl apply -f "${script_dir}/rolloutmanager.yaml"
 
 		echo "Waiting for argo-rollouts deployment to be created"
+		local timeout=150
+		local elapsed=0
 		until kubectl get deployment/argo-rollouts -n argo-rollouts &>/dev/null; do
+			if [ "$elapsed" -ge "$timeout" ]; then
+				echo "❌ Timeout waiting for argo-rollouts deployment to be created"
+				return 1
+			fi
 			sleep 2
+			elapsed=$((elapsed + 2))
 		done
 
 		echo "Waiting for argo-rollouts deployment to be ready"
@@ -302,6 +309,9 @@ function install_kubernetes_agent() {
 	local_path="$(dirname "$(pwd)")/$repo/"
 
 	echo "Creating secret 'argo-rollouts-secret'..."
+	if [ -z "${GEMINI_API_KEY:-}" ]; then
+		echo "⚠️  WARNING: GEMINI_API_KEY is not set. The Kubernetes Agent may fail to function."
+	fi
 	kubectl create secret generic argo-rollouts-secret \
 		--namespace=argo-rollouts \
 		--from-literal=GEMINI_API_KEY="${GEMINI_API_KEY:-}" \
@@ -368,7 +378,7 @@ function install_gemma() {
 	local gemma_manifest=""
 	set -x
 	if [ -d "$(dirname "$(pwd)")/kubernetes-agent/" ]; then
-		gemma_manifest="$(dirname "$(pwd)")/kubernetes-agent/deployment/gemma"
+		gemma_manifest="$(dirname "$(pwd)")/kubernetes-agent/k8s/gemma"
 	fi
 
 	if [ -n "${gemma_manifest}" ] && [ -d "${gemma_manifest}" ]; then
@@ -376,7 +386,7 @@ function install_gemma() {
 		kubectl apply -k "${gemma_manifest}"
 	else
 		echo "Gemma deployment manifests not found"
-		echo "Please ensure the gemma deployment directory exists at kubernetes-agent/deployment/gemma"
+		echo "Please ensure the gemma deployment directory exists at kubernetes-agent/k8s/gemma"
 		return 1
 	fi
 
