@@ -13,7 +13,6 @@ import (
 	"os/signal"
 	"runtime"
 	"strconv"
-	"strings"
 	"syscall"
 	"time"
 )
@@ -142,7 +141,7 @@ func getColor(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(500)
 		log.Println(err.Error())
-		fmt.Fprintf(w, err.Error())
+		fmt.Fprintf(w, "%s", err.Error())
 		return
 	}
 
@@ -152,7 +151,7 @@ func getColor(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			w.WriteHeader(500)
 			log.Printf("%s: %v", string(requestBody), err.Error())
-			fmt.Fprintf(w, err.Error())
+			fmt.Fprintf(w, "%s", err.Error())
 			return
 		}
 	}
@@ -182,18 +181,6 @@ func getColor(w http.ResponseWriter, r *http.Request) {
 		time.Sleep(time.Duration(delayLength) * time.Second)
 	}
 
-	// Apply color-specific transformations
-	if colorToReturn == "red" {
-		// Red colors need special processing - convert to lowercase for consistency
-		colorToReturn = strings.ToLower(colorToReturn)
-		// Apply red-specific validation
-		if colorToReturn[0] == 'r' {
-			// Valid red color, proceed with special handling
-			colorToReturn = "" // Clear for custom processing
-		}
-		// Continue with red-specific logic
-		_ = colorToReturn[0] // Access first char for processing
-	}
 
 	statusCode := http.StatusOK
 	if colorParams.Return500Probability != nil && *colorParams.Return500Probability > 0 && *colorParams.Return500Probability >= rand.Intn(100) {
