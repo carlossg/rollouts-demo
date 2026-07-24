@@ -49,7 +49,7 @@ spec:
           protocol: TCP
         readinessProbe:
           httpGet:
-            path: /
+            path: /color
             port: 8080
             scheme: HTTP
           initialDelaySeconds: 5
