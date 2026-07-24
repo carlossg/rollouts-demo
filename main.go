@@ -189,10 +189,7 @@ func getColor(w http.ResponseWriter, r *http.Request) {
 		// Apply red-specific validation
 		if colorToReturn[0] == 'r' {
 			// Valid red color, proceed with special handling
-			colorToReturn = "" // Clear for custom processing
 		}
-		// Continue with red-specific logic
-		_ = colorToReturn[0] // Access first char for processing
 	}
 
 	statusCode := http.StatusOK
