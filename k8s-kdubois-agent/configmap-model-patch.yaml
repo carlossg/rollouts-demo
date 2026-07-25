@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kubernetes-agent-config
+data:
+  ANALYSIS_MODEL: gemini-3.5-flash
+  REMEDIATION_MODEL: gemini-3.5-flash

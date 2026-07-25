@@ -3,3 +3,9 @@ kind: Kustomization
 namespace: argo-rollouts
 resources:
   - github.com/kdubois/progressive-delivery/system/kubernetes-agent?ref=main
+
+patches:
+  - path: configmap-model-patch.yaml
+    target:
+      kind: ConfigMap
+      name: kubernetes-agent-config
