@@ -2,6 +2,7 @@
 
 PROJECT="${1:-}"
 INSTALL_GEMMA="${INSTALL_GEMMA:-false}" # Set to 'true' to install Gemma server
+AGENT_TYPE="${AGENT_TYPE:-antigravity}" # Set to 'antigravity' or 'kdubois' to select the Kubernetes Agent implementation
 
 if [ -z "${PROJECT}" ]; then
 	PROJECT=$(gcloud config get-value project)

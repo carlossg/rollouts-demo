@@ -299,6 +299,18 @@ function create_ingress() {
 }
 
 function install_kubernetes_agent() {
+	local agent_type="${AGENT_TYPE:-antigravity}"
+	case "${agent_type}" in
+		antigravity) install_kubernetes_agent_antigravity ;;
+		kdubois) install_kubernetes_agent_kdubois ;;
+		*)
+			echo "❌ Unknown AGENT_TYPE '${agent_type}' (expected 'antigravity' or 'kdubois')"
+			return 1
+			;;
+	esac
+}
+
+function install_kubernetes_agent_antigravity() {
 	local repo=kubernetes-agents-antigravity
 	echo "Installing Kubernetes Agents: $repo"
 	local local_path
@@ -323,6 +335,27 @@ function install_kubernetes_agent() {
 		kubectl apply -n argo-rollouts -k $repo/k8s
 		popd >/dev/null
 	fi
+}
+
+function install_kubernetes_agent_kdubois() {
+	local script_dir
+	script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+	echo "Installing Kubernetes Agent: kdubois/kubernetes-aiops-agent"
+
+	if [ -z "${GEMINI_API_KEY:-}" ]; then
+		echo "⚠️  WARNING: GEMINI_API_KEY is not set. The Kubernetes Agent may fail to function."
+	fi
+
+	echo "Creating secret 'kubernetes-agent'..."
+	kubectl create secret generic kubernetes-agent \
+		--namespace=argo-rollouts \
+		--from-literal=analysis_api_key="${GEMINI_API_KEY:-}" \
+		--from-literal=remediation_api_key="${GEMINI_API_KEY:-}" \
+		--dry-run=client -o yaml | kubectl apply -f -
+
+	echo "Installing kdubois/kubernetes-aiops-agent"
+	kubectl apply -k "${script_dir}/k8s-kdubois-agent"
 }
 
 function check_huggingface_secret() {
