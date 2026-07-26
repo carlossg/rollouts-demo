@@ -347,6 +347,14 @@ function install_kubernetes_agent_kdubois() {
 		echo "⚠️  WARNING: GEMINI_API_KEY is not set. The Kubernetes Agent may fail to function."
 	fi
 
+	local github_token="${GITHUB_TOKEN:-}"
+	if [ -z "${github_token}" ]; then
+		local metric_ai_env="${script_dir}/../rollouts-plugin-metric-ai/.env"
+		if [ -f "${metric_ai_env}" ]; then
+			github_token="$(grep -m1 '^GITHUB_TOKEN=' "${metric_ai_env}" | cut -d= -f2-)"
+		fi
+	fi
+
 	echo "Creating secret 'kubernetes-agent'..."
 	# github_token must be a non-blank string - the agent's github.token config
 	# property is bound as a required String, so an absent or empty value crashes
@@ -356,7 +364,7 @@ function install_kubernetes_agent_kdubois() {
 		--namespace=argo-rollouts \
 		--from-literal=analysis_api_key="${GEMINI_API_KEY:-}" \
 		--from-literal=remediation_api_key="${GEMINI_API_KEY:-}" \
-		--from-literal=github_token="${GITHUB_TOKEN:-unused}" \
+		--from-literal=github_token="${github_token:-unused}" \
 		--dry-run=client -o yaml | kubectl apply -f -
 
 	echo "Installing kdubois/kubernetes-aiops-agent"
