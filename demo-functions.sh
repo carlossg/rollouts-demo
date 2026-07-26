@@ -282,20 +282,27 @@ function install_argo_rollouts() {
 	fi
 }
 
+function wait_for_ingress_ip() {
+	local ingress="${1:?}"
+	local namespace="${2:-default}"
+
+	echo "Getting ingress ip for ${ingress} (namespace ${namespace})"
+	local ip=$(kubectl get ingress "${ingress}" -n "${namespace}" -o jsonpath='{.status.loadBalancer.ingress[0].ip}{"\n"}')
+	while [ -z "$ip" ]; do
+		echo "Waiting for ingress to have an ip"
+		sleep 10
+		ip=$(kubectl get ingress "${ingress}" -n "${namespace}" -o jsonpath='{.status.loadBalancer.ingress[0].ip}{"\n"}')
+	done
+	echo "Ingress ip: $ip"
+}
+
 function create_ingress() {
 	local ingress=canary-csanchez
 
 	echo "Creating ingress"
 	kubectl apply -f ingress-csanchez.yaml
 
-	echo "Getting ingress ip"
-	local ip=$(kubectl get ingress "${ingress}" -o jsonpath='{.status.loadBalancer.ingress[0].ip}{"\n"}')
-	while [ -z "$ip" ]; do
-		echo "Waiting for ingress to have an ip"
-		sleep 10
-		ip=$(kubectl get ingress "${ingress}" -o jsonpath='{.status.loadBalancer.ingress[0].ip}{"\n"}')
-	done
-	echo "Ingress ip: $ip"
+	wait_for_ingress_ip "${ingress}" default
 }
 
 function install_kubernetes_agent() {

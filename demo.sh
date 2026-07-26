@@ -36,6 +36,11 @@ kubectl scale rollout.argoproj.io/canary-demo --replicas=1
 # Create ingress after service is ready
 create_ingress
 
+# quarkus-demo's ingress was already applied above with its rollout
+if [ "${AGENT_TYPE}" = "kdubois" ]; then
+	wait_for_ingress_ip quarkus-demo quarkus-demo
+fi
+
 # Install Gemma if requested
 if [ "${INSTALL_GEMMA}" = "true" ]; then
 	install_gemma
