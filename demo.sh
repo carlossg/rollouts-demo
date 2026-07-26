@@ -24,6 +24,12 @@ echo "Creating the rollout"
 kubectl apply -k examples/analysis
 # skaffold apply
 
+# Kevin's quarkus-rollouts-demo - depends on the kdubois Kubernetes Agent
+if [ "${AGENT_TYPE}" = "kdubois" ]; then
+	echo "Creating the quarkus-rollouts-demo rollout"
+	kubectl apply -k "${script_dir}/k8s-kevin-quarkus-demo"
+fi
+
 # scale down for now
 kubectl scale rollout.argoproj.io/canary-demo --replicas=1
 
