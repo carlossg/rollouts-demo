@@ -348,10 +348,15 @@ function install_kubernetes_agent_kdubois() {
 	fi
 
 	echo "Creating secret 'kubernetes-agent'..."
+	# github_token must be a non-blank string - the agent's github.token config
+	# property is bound as a required String, so an absent or empty value crashes
+	# it at boot even though the Deployment's secretKeyRef marks it optional at
+	# the K8s level.
 	kubectl create secret generic kubernetes-agent \
 		--namespace=argo-rollouts \
 		--from-literal=analysis_api_key="${GEMINI_API_KEY:-}" \
 		--from-literal=remediation_api_key="${GEMINI_API_KEY:-}" \
+		--from-literal=github_token="${GITHUB_TOKEN:-unused}" \
 		--dry-run=client -o yaml | kubectl apply -f -
 
 	echo "Installing kdubois/kubernetes-aiops-agent"
@@ -444,6 +449,7 @@ function scale_down() {
 
 	echo "Scaling all deployments in argo-rollouts namespace to 0..."
 	kubectl scale deployment --all -n argo-rollouts --replicas=0 || echo "  ⚠️  deployments not found"
+	kubectl scale sandbox --all -n argo-rollouts --replicas=0 || echo "  ⚠️  sandboxes not found"
 
 	echo "Scaling all deployments in gemma-system namespace to 0..."
 	kubectl scale deployment --all -n gemma-system --replicas=0 || echo "  ⚠️  deployments not found"
