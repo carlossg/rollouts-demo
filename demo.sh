@@ -57,12 +57,16 @@ kubectl argo rollouts dashboard
 # kubectl argo rollouts set image canary-demo "*=argoproj/rollouts-demo:bad-red"
 # kubectl argo rollouts set image canary-demo "*=argoproj/rollouts-demo:slow-yellow"
 
+# kubectl argo rollouts set image quarkus-demo "*=ghcr.io/kdubois/argo-rollouts-quarkus-demo:main"
+# kubectl argo rollouts set image quarkus-demo "*=ghcr.io/kdubois/argo-rollouts-quarkus-demo:v1.stable"
+# kubectl argo rollouts set image quarkus-demo "*=ghcr.io/kdubois/argo-rollouts-quarkus-demo:v2.nullpointer"
+# kubectl argo rollouts set image quarkus-demo "*=ghcr.io/kdubois/argo-rollouts-quarkus-demo:v3.memoryleak
+
+
 # Scale down all components (useful for saving costs when not in use)
 # scale_down
 
 # Scale back up all components
 # scale_up
 
-# gcloud container \
-# 	clusters delete "${CLUSTER_NAME}" \
-# 	--region "us-central1"
+# tear_down

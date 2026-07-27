@@ -456,8 +456,12 @@ function scale_down() {
 	echo "Scaling all deployments in argo-rollouts-manager-system namespace to 0..."
 	kubectl scale deployment --all -n argo-rollouts-manager-system --replicas=0 || echo "  ⚠️  deployments not found"
 
-	echo "Scaling all rollouts to 0..."
-	kubectl scale rollout --all --replicas=0 || echo "  ⚠️  rollouts not found"
+	echo "Scaling all rollouts in default namespace to 0..."
+	kubectl scale rollout --all -n default --replicas=0 || echo "  ⚠️  rollouts not found"
+
+	echo "Scaling all rollouts in quarkus-demo namespace to 0..."
+	kubectl scale rollout --all -n quarkus-demo --replicas=0 || echo "  ⚠️  rollouts not found"
+	kubectl delete replicaset --all -n quarkus-demo || echo "  ⚠️  replicasets not found"
 
 	echo "Scaling all deployments in default namespace to 0..."
 	kubectl scale deployment --all -n default --replicas=0 || echo "  ⚠️  deployments not found"
@@ -482,11 +486,14 @@ function scale_up() {
 
 	# Read saved replica counts (default to 1 if files don't exist)
 
-	echo "Scaling all rollouts to 1..."
-	kubectl scale rollout --all --replicas=1 || echo "  ⚠️  rollouts not found"
+	echo "Scaling all rollouts in default namespace to 1..."
+	kubectl scale rollout --all -n default --replicas=1 || echo "  ⚠️  rollouts not found"
 
 	echo "Scaling all deployments in default namespace to 1..."
 	kubectl scale deployment --all -n default --replicas=1 || echo "  ⚠️  deployments not found"
+
+	echo "Scaling all rollouts in quarkus-demo namespace to 1..."
+	kubectl scale rollout --all -n quarkus-demo --replicas=1 || echo "  ⚠️  rollouts not found"
 
 	echo "Scaling all deployments in argo-rollouts namespace to 1..."
 	kubectl scale deployment --all -n argo-rollouts --replicas=1 || echo "  ⚠️  deployments not found"
@@ -505,4 +512,25 @@ function scale_up() {
 	kubectl wait --for=condition=ready pod -l app=kubernetes-agent -n argo-rollouts --timeout=120s 2>/dev/null || echo "  ⚠️  kubernetes-agent pod not ready yet"
 	kubectl wait --for=condition=ready pod -l app=gemma-server -n gemma-system --timeout=300s 2>/dev/null || echo "  ℹ  gemma-server pod not ready yet (or not deployed)"
 	echo ""
+}
+
+function tear_down() {
+	echo "========================================="
+	echo "Tearing Down Cluster"
+	echo "========================================="
+	echo ""
+
+	# Delete ingresses first and wait for it to finish - GKE's ingress-gce
+	# controller uses a finalizer, so this blocks until the GCE load balancer
+	# resources (forwarding rules, backend services, NEGs) are cleaned up.
+	# Deleting the cluster first leaves those orphaned since the controller
+	# that would clean them up disappears with it, which eventually exhausts
+	# the project's NEG quota.
+	echo "Deleting ingresses..."
+	kubectl delete ingress --all --all-namespaces --ignore-not-found --timeout=5m
+
+	gcloud container \
+		clusters delete "${CLUSTER_NAME}" \
+		--region "us-central1"
+
 }
