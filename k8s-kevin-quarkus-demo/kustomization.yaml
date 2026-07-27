@@ -86,3 +86,20 @@ patches:
       - op: replace
         path: /spec/template/spec/containers/0/image
         value: ghcr.io/kdubois/argo-rollouts-quarkus-demo:v1.stable
+
+  # Without this, the app falls back to its baked-in default
+  # (http://kubernetes-agent.openshift-gitops.svc.cluster.local:8080), a
+  # namespace that doesn't exist here - the app's own dashboard activity feed
+  # (/api/agent/events) silently fails to reach the agent (caught exception,
+  # trace-level log) and shows "Waiting for agent activity..." forever, even
+  # during a real rollout, since the AnalysisTemplate's own agentUrl is a
+  # separate, correctly-configured code path.
+  - target:
+      kind: Rollout
+      name: quarkus-demo
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: KUBERNETES_AGENT_URL
+          value: http://kubernetes-agent.argo-rollouts.svc.cluster.local:8080
