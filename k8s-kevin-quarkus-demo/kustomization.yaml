@@ -6,8 +6,29 @@ namespace: quarkus-demo
 resources:
   - github.com/carlossg/progressive-delivery/workloads/quarkus-rollouts-demo/base?ref=main
   - ingress.yaml
+  - backendconfig.yaml
 
 patches:
+  # /api/agent/events/stream is a long-lived SSE endpoint; GCE's default 30s
+  # backend timeout kills it mid-stream (ERR_INCOMPLETE_CHUNKED_ENCODING) -
+  # point both services at a BackendConfig with a much longer timeout
+  - target:
+      kind: Service
+      name: quarkus-demo-stable
+    patch: |-
+      - op: add
+        path: /metadata/annotations
+        value:
+          cloud.google.com/backend-config: '{"default": "quarkus-demo-backendconfig"}'
+  - target:
+      kind: Service
+      name: quarkus-demo-canary
+    patch: |-
+      - op: add
+        path: /metadata/annotations
+        value:
+          cloud.google.com/backend-config: '{"default": "quarkus-demo-backendconfig"}'
+
   # Point GitHub issue creation at carlossg's fork, since even the fork's own
   # manifests still reference the kdubois upstream repo
   - target:
@@ -52,3 +73,16 @@ patches:
     patch: |-
       - op: remove
         path: /spec/strategy/canary/trafficRouting
+
+  # Pin the steady-state image to the known-good v1.stable. Upstream's base
+  # hardcodes v3.memoryleak, so without this override every `kubectl apply -k`
+  # (even for unrelated changes) resets the image and re-triggers a canary
+  # against the broken memory-leak build. Switch scenarios imperatively via
+  # `kubectl argo rollouts set image` instead of editing this file.
+  - target:
+      kind: Rollout
+      name: quarkus-demo
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/image
+        value: ghcr.io/kdubois/argo-rollouts-quarkus-demo:v1.stable
