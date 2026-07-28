@@ -9,3 +9,13 @@ patches:
     target:
       kind: ConfigMap
       name: kubernetes-agent-config
+
+# Use our own fork's build (fixes thought_signature errors on remediation's
+# multi-turn tool use - see carlossg/kubernetes-aiops-agent#5 - and the
+# repo-clone-cache ref-naming bug - see #4), tagged with the exact commit
+# SHA so this stays pinned and traceable rather than floating on a mutable
+# branch tag.
+images:
+  - name: ghcr.io/kdubois/kubernetes-agent
+    newName: ghcr.io/carlossg/kubernetes-aiops-agent
+    newTag: 10728204b43d429e3bf5ec8c393e08b8a8bec48a
