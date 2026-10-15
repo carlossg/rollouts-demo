@@ -309,7 +309,7 @@ function install_kubernetes_agent() {
 	local agent_type="${AGENT_TYPE:-antigravity}"
 	case "${agent_type}" in
 		antigravity) install_kubernetes_agent_antigravity ;;
-		kdubois) install_kubernetes_agent_kdubois ;;
+		kdubois) install_kubernetes_agent_kdubois; uninstall_kubernetes_agent_antigravity ;;
 		*)
 			echo "❌ Unknown AGENT_TYPE '${agent_type}' (expected 'antigravity' or 'kdubois')"
 			return 1
@@ -342,6 +342,14 @@ function install_kubernetes_agent_antigravity() {
 		kubectl apply -n argo-rollouts -k $repo/k8s
 		popd >/dev/null
 	fi
+}
+
+function uninstall_kubernetes_agent_antigravity() {
+	echo "Uninstalling Kubernetes Agent (antigravity)"
+	kubectl delete -n argo-rollouts deploy/kubernetes-agent-events
+	kubectl delete -n argo-rollouts deploy/kubernetes-agent-log-proxy
+	kubectl delete -n argo-rollouts deploy/kubernetes-agent-metrics
+	kubectl delete -n argo-rollouts deploy/kubernetes-agent-orchestrator
 }
 
 function install_kubernetes_agent_kdubois() {
@@ -493,7 +501,7 @@ function scale_up() {
 	kubectl scale deployment --all -n default --replicas=1 || echo "  ⚠️  deployments not found"
 
 	echo "Scaling all rollouts in quarkus-demo namespace to 1..."
-	kubectl scale rollout --all -n quarkus-demo --replicas=1 || echo "  ⚠️  rollouts not found"
+	kubectl scale rollout --all -n quarkus-demo --replicas=10 || echo "  ⚠️  rollouts not found"
 
 	echo "Scaling all deployments in argo-rollouts namespace to 1..."
 	kubectl scale deployment --all -n argo-rollouts --replicas=1 || echo "  ⚠️  deployments not found"
@@ -515,6 +523,15 @@ function scale_up() {
 }
 
 function tear_down() {
+	# confirm (portable across bash and zsh; zsh's `read` has no -p/-n flags)
+	printf "Are you sure you want to tear down the cluster? (y/N) "
+	read -r REPLY
+	echo
+	if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+		echo "Aborted."
+		return 1
+	fi
+
 	echo "========================================="
 	echo "Tearing Down Cluster"
 	echo "========================================="
@@ -529,6 +546,7 @@ function tear_down() {
 	echo "Deleting ingresses..."
 	kubectl delete ingress --all --all-namespaces --ignore-not-found --timeout=5m
 
+	echo "Deleting cluster ${CLUSTER_NAME}..."
 	gcloud container \
 		clusters delete "${CLUSTER_NAME}" \
 		--region "us-central1"
