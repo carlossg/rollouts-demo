@@ -244,11 +244,11 @@ function install_argo_rollouts() {
 
 	if ! kubectl get deployment/argo-rollouts -n argo-rollouts &>/dev/null; then
 		echo "Installing argo-rollouts-manager operator"
-		kubectl apply -k "${operator_kustomize_url}"
+		kubectl apply --server-side --force-conflicts -k "${operator_kustomize_url}"
 
 		echo "Patching operator image to use public registry"
 		kubectl set image -n "${operator_ns}" "deployment/${operator_deployment}" \
-			manager=csanchez/argo-rollouts-manager@sha256:ead150e30c6529572d33c7437810758b3576227b71d5a12e533a7619c0751b80
+			manager=csanchez/argo-rollouts-manager:latest@sha256:ead150e30c6529572d33c7437810758b3576227b71d5a12e533a7619c0751b80
 		kubectl set env -n "${operator_ns}" "deployment/${operator_deployment}" \
 			CLUSTER_SCOPED_ARGO_ROLLOUTS_NAMESPACES=argo-rollouts
 

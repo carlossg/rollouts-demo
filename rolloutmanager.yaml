@@ -5,7 +5,10 @@ metadata:
   namespace: argo-rollouts
 spec:
   namespaceScoped: false
+  image: quay.io/argoproj/argo-rollouts:v1.9.0
+  version: sha256:13346024500167f71815e1dcd7671f46378137e726ef03b2baf69a188224f813
   plugins:
     metric:
       - name: argoproj-labs/metric-ai
-        location: https://storage.googleapis.com/api-project-642841493686_cloudbuild/rollouts-plugin-metric-ai-linux-amd64
+        location: https://github.com/argoproj-labs/rollouts-plugin-metric-ai/releases/download/v0.1.10/rollouts-plugin-metric-ai-linux-amd64
+        sha256: b185c6ff642a8e4d324cdcd4da237b1b616ed93077b1a6a24e83bcd5362fc812

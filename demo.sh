@@ -57,10 +57,9 @@ kubectl argo rollouts dashboard
 # kubectl argo rollouts set image canary-demo "*=argoproj/rollouts-demo:bad-red"
 # kubectl argo rollouts set image canary-demo "*=argoproj/rollouts-demo:slow-yellow"
 
-# kubectl argo rollouts set image quarkus-demo "*=ghcr.io/kdubois/argo-rollouts-quarkus-demo:main"
-# kubectl argo rollouts set image quarkus-demo "*=ghcr.io/kdubois/argo-rollouts-quarkus-demo:v1.stable"
-# kubectl argo rollouts set image quarkus-demo "*=ghcr.io/kdubois/argo-rollouts-quarkus-demo:v2.nullpointer"
-# kubectl argo rollouts set image quarkus-demo "*=ghcr.io/kdubois/argo-rollouts-quarkus-demo:v3.memoryleak
+# kubectl argo rollouts set image quarkus-demo "*=ghcr.io/kdubois/argo-rollouts-quarkus-demo:v1.stable@sha256:2d12930f365812a6b1517d35b12343def51cbcbec29575369dd28c4a14a32b93" -n quarkus-demo
+# kubectl argo rollouts set image quarkus-demo "*=ghcr.io/kdubois/argo-rollouts-quarkus-demo:v2.nullpointer@sha256:8a2d9be0071471d4a6366129aa15bf4bce760e0620cb63074bec7b49971aa018" -n quarkus-demo
+# kubectl argo rollouts set image quarkus-demo "*=ghcr.io/kdubois/argo-rollouts-quarkus-demo:v3.memoryleak@sha256:606babfc5a6c391027d5c3c30d2846eacebfb4ecec87c40ceb0ed28ec022d307" -n quarkus-demo
 
 
 # Scale down all components (useful for saving costs when not in use)

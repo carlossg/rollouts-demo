@@ -85,7 +85,7 @@ patches:
     patch: |-
       - op: replace
         path: /spec/template/spec/containers/0/image
-        value: ghcr.io/kdubois/argo-rollouts-quarkus-demo:v1.stable
+        value: ghcr.io/kdubois/argo-rollouts-quarkus-demo:v1.stable@sha256:2d12930f365812a6b1517d35b12343def51cbcbec29575369dd28c4a14a32b93
 
   # Without this, the app falls back to its baked-in default
   # (http://kubernetes-agent.openshift-gitops.svc.cluster.local:8080), a
