@@ -173,12 +173,28 @@ func TestGetColor_AllColors(t *testing.T) {
 func TestRandomColor(t *testing.T) {
 	// Test that randomColor returns a valid color
 	validColors := map[string]bool{"red": true, "orange": true, "yellow": true, "green": true, "blue": true, "purple": true}
-	
+
 	for i := 0; i < 100; i++ {
 		color := randomColor()
 		if !validColors[color] {
 			t.Errorf("randomColor returned invalid color: %s", color)
 		}
+	}
+}
+
+func TestRandomColor_EmptyColors(t *testing.T) {
+	// Set colors to an empty slice
+	originalColors := colors
+	colors = []string{}
+	defer func() {
+		colors = originalColors
+	}()
+
+	// This should not panic
+	color := randomColor()
+
+	if color != "blue" {
+		t.Errorf("Expected 'blue' when colors slice is empty, got %s", color)
 	}
 }
 
