@@ -54,7 +54,6 @@ kubectl argo rollouts get rollout canary-demo
 kubectl argo rollouts dashboard
 
 # kubectl argo rollouts set image canary-demo "*=argoproj/rollouts-demo:green"
-# kubectl argo rollouts set image canary-demo "*=argoproj/rollouts-demo:bad-red"
 # kubectl argo rollouts set image canary-demo "*=argoproj/rollouts-demo:slow-yellow"
 
 # kubectl argo rollouts set image quarkus-demo "*=ghcr.io/kdubois/argo-rollouts-quarkus-demo:v1.stable@sha256:2d12930f365812a6b1517d35b12343def51cbcbec29575369dd28c4a14a32b93" -n quarkus-demo
