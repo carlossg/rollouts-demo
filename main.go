@@ -29,8 +29,8 @@ const (
 )
 
 var (
-	color  = os.Getenv("COLOR")
-	colors = []string{
+	color      = os.Getenv("COLOR")
+	colors     = []string{
 		"red",
 		"orange",
 		"yellow",
@@ -40,6 +40,8 @@ var (
 	}
 	envLatency   float64
 	envErrorRate int
+	seededRand *rand.Rand = rand.New(
+		rand.NewSource(time.Now().UnixNano()))
 )
 
 func init() {
@@ -72,8 +74,6 @@ func main() {
 	flag.StringVar(&numCPUBurn, "cpu-burn", "", "burn specified number of cpus (number or 'all')")
 	flag.BoolVar(&tls, "tls", false, "Enable TLS (with self-signed certificate)")
 	flag.Parse()
-
-	rand.Seed(time.Now().UnixNano())
 
 	router := http.NewServeMux()
 	router.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir("./"))))
@@ -158,9 +158,6 @@ func getColor(w http.ResponseWriter, r *http.Request) {
 	}
 
 	colorToReturn := randomColor()
-	if color != "" {
-		colorToReturn = color
-	}
 
 	var colorParams colorParameters
 	for i := range request {
@@ -196,9 +193,9 @@ func getColor(w http.ResponseWriter, r *http.Request) {
 	}
 
 	statusCode := http.StatusOK
-	if colorParams.Return500Probability != nil && *colorParams.Return500Probability > 0 && *colorParams.Return500Probability >= rand.Intn(100) {
+	if colorParams.Return500Probability != nil && *colorParams.Return500Probability > 0 && *colorParams.Return500Probability >= seededRand.Intn(100) {
 		statusCode = http.StatusInternalServerError
-	} else if envErrorRate > 0 && rand.Intn(100) >= envErrorRate {
+	} else if envErrorRate > 0 && seededRand.Intn(100) >= envErrorRate {
 		statusCode = http.StatusInternalServerError
 	}
 	printColor(colorToReturn, w, statusCode)
@@ -213,7 +210,10 @@ func printColor(colorToPrint string, w http.ResponseWriter, statusCode int) {
 }
 
 func randomColor() string {
-	return colors[rand.Int()%len(colors)]
+	if len(colors) == 0 {
+		return "blue"
+	}
+	return colors[seededRand.Intn(len(colors))]
 }
 
 func cpuBurn(done <-chan bool, numCPUBurn string) {
