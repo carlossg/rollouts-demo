@@ -171,15 +171,36 @@ func TestGetColor_AllColors(t *testing.T) {
 }
 
 func TestRandomColor(t *testing.T) {
-	// Test that randomColor returns a valid color
-	validColors := map[string]bool{"red": true, "orange": true, "yellow": true, "green": true, "blue": true, "purple": true}
-	
-	for i := 0; i < 100; i++ {
-		color := randomColor()
-		if !validColors[color] {
-			t.Errorf("randomColor returned invalid color: %s", color)
+	t.Run("ValidColors", func(t *testing.T) {
+		// Test that randomColor returns a valid color when colors are present
+		originalColors := colors
+		colors = []string{"red", "orange", "yellow", "green", "blue", "purple"}
+		defer func() {
+			colors = originalColors
+		}()
+		validColors := map[string]bool{"red": true, "orange": true, "yellow": true, "green": true, "blue": true, "purple": true}
+
+		for i := 0; i < 100; i++ {
+			color := randomColor()
+			if !validColors[color] {
+				t.Errorf("randomColor returned invalid color: %s", color)
+			}
 		}
-	}
+	})
+
+	t.Run("EmptyColors", func(t *testing.T) {
+		// Test that randomColor returns "black" when colors slice is empty
+		originalColors := colors
+		colors = []string{}
+		defer func() {
+			colors = originalColors
+		}()
+
+		color := randomColor()
+		if color != "black" {
+			t.Errorf("Expected 'black' when colors slice is empty, got %s", color)
+		}
+	})
 }
 
 func TestPrintColor(t *testing.T) {
