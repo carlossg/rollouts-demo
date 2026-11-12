@@ -38,6 +38,7 @@ spec:
     metadata:
       labels:
         app: canary-demo
+        role: canary
     spec:
       containers:
       - image: argoproj/rollouts-demo:blue
