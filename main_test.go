@@ -128,6 +128,41 @@ func TestGetColor_WithColorParameters(t *testing.T) {
 	}
 }
 
+func TestGetColor_RedColor(t *testing.T) {
+	// Set COLOR env var to red
+	originalColor := os.Getenv("COLOR")
+	os.Setenv("COLOR", "red")
+	defer func() {
+		if originalColor == "" {
+			os.Unsetenv("COLOR")
+		} else {
+			os.Setenv("COLOR", originalColor)
+		}
+	}()
+
+	// Reload color variable
+	color = os.Getenv("COLOR")
+
+	req := httptest.NewRequest(http.MethodPost, "/color", nil)
+	w := httptest.NewRecorder()
+
+	// This should not panic
+	getColor(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+
+	var returnedColor string
+	if err := json.Unmarshal(w.Body.Bytes(), &returnedColor); err != nil {
+		t.Errorf("Failed to parse response: %v", err)
+	}
+
+	if returnedColor != "red" {
+		t.Errorf("Expected 'red', got %s", returnedColor)
+	}
+}
+
 func TestGetColor_AllColors(t *testing.T) {
 	// Test that all colors work without panicking
 	testColors := []string{"red", "orange", "yellow", "green", "blue", "purple"}
