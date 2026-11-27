@@ -3,13 +3,7 @@ kind: ConfigMap
 metadata:
   name: kubernetes-agent-config
 data:
-  # Keep ANALYSIS_MODEL on gemini-3.5-flash while kustomization.yaml pins
-  # kubernetes-aiops-agent@10728204: its GeminiCompatibleModelCustomizer
-  # sends reasoningEffort("none") on the OpenAI-compatible analysis client,
-  # which gemini-4-hydrogen rejects with HTTP 400.
-  ANALYSIS_MODEL: gemini-3.5-flash
-  # Remediation uses the native ai-gemini client (thought_signature round-trip
-  # without reasoningEffort("none")), so gemini-4-hydrogen works.
+  ANALYSIS_MODEL: gemini-4-hydrogen
   # Deployment reads these keys via envFrom, so re-syncing alone does not reload
   # existing pods: run `kubectl -n argo-rollouts rollout restart deployment/kubernetes-agent`
   # after applying (automated by install_kubernetes_agent_kdubois in demo-functions.sh).
