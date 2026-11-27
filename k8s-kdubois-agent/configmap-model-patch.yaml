@@ -3,5 +3,5 @@ kind: ConfigMap
 metadata:
   name: kubernetes-agent-config
 data:
-  ANALYSIS_MODEL: gemini-3.5-flash
-  REMEDIATION_MODEL: gemini-3.5-flash
+  ANALYSIS_MODEL: gemini-4-hydrogen
+  REMEDIATION_MODEL: gemini-4-hydrogen

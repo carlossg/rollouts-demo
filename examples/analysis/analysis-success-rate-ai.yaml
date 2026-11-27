@@ -42,7 +42,7 @@ spec:
             analysisMode: default
             # stablePodLabel: app=rollouts-demo,revision=stable
             # canaryPodLabel: app=rollouts-demo,revision=canary
-            model: gemini-2.0-flash
+            model: gemini-4-hydrogen
             githubUrl: https://github.com/carlossg/rollouts-demo
             extraPrompt: |
               Ignore color changes.
