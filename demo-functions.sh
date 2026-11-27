@@ -388,7 +388,7 @@ function install_kubernetes_agent_kdubois() {
 	fi
 
 	echo "Installing kdubois/kubernetes-aiops-agent"
-	kubectl apply -k "${script_dir}/k8s-kdubois-agent"
+	kubectl apply -k "${script_dir}/k8s-kdubois-agent" || return $?
 
 	if [ "${had_deployment}" = "true" ]; then
 		# Deployment reads kubernetes-agent-config via envFrom, so updating the
