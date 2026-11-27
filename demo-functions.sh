@@ -382,8 +382,20 @@ function install_kubernetes_agent_kdubois() {
 		--from-literal=github_token="${github_token:-unused}" \
 		--dry-run=client -o yaml | kubectl apply -f -
 
+	local had_deployment=false
+	if kubectl get deployment/kubernetes-agent -n argo-rollouts &>/dev/null; then
+		had_deployment=true
+	fi
+
 	echo "Installing kdubois/kubernetes-aiops-agent"
 	kubectl apply -k "${script_dir}/k8s-kdubois-agent"
+
+	if [ "${had_deployment}" = "true" ]; then
+		# Deployment reads kubernetes-agent-config via envFrom, so updating the
+		# ConfigMap leaves running pods on the previous models until restarted.
+		echo "Restarting deployment/kubernetes-agent to pick up ConfigMap changes"
+		kubectl -n argo-rollouts rollout restart deployment/kubernetes-agent
+	fi
 }
 
 function check_huggingface_secret() {
