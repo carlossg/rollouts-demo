@@ -382,8 +382,25 @@ function install_kubernetes_agent_kdubois() {
 		--from-literal=github_token="${github_token:-unused}" \
 		--dry-run=client -o yaml | kubectl apply -f -
 
+	local had_deployment=false
+	if kubectl get deployment/kubernetes-agent -n argo-rollouts &>/dev/null; then
+		had_deployment=true
+	fi
+
 	echo "Installing kdubois/kubernetes-aiops-agent"
-	kubectl apply -k "${script_dir}/k8s-kdubois-agent"
+	local apply_status=0
+	kubectl apply -k "${script_dir}/k8s-kdubois-agent" || apply_status=$?
+
+	if [ "${had_deployment}" = "true" ]; then
+		# Deployment reads kubernetes-agent-config via envFrom and secretKeyRef, so
+		# updating either leaves running pods on old values until restarted.
+		echo "Restarting deployment/kubernetes-agent to pick up ConfigMap/Secret changes"
+		kubectl -n argo-rollouts rollout restart deployment/kubernetes-agent || {
+			[ "${apply_status}" -ne 0 ] && return "${apply_status}"
+			return $?
+		}
+	fi
+	return "${apply_status}"
 }
 
 function check_huggingface_secret() {

@@ -24,25 +24,3 @@ spec:
             extraPrompt: |
               Ignore color changes. 
               Consider LoadBalancerNegNotReady, LoadBalancerNegWithoutHealthCheck, FailedScheduling, and temporary readiness/liveness probe failures (e.g. connection refused during startup) as normal temporary rollout conditions, not errors.
----
-apiVersion: argoproj.io/v1alpha1
-kind: AnalysisTemplate
-metadata:
-  name: canary-analysis-ai
-spec:
-  metrics:
-    - name: success-rate
-      interval: 10s
-      successCondition: result > 0.50
-      consecutiveErrorLimit: 0
-      provider:
-        plugin:
-          argoproj-labs/metric-ai:
-            # Use default mode (inline mode)
-            analysisMode: default
-            # stablePodLabel: app=rollouts-demo,revision=stable
-            # canaryPodLabel: app=rollouts-demo,revision=canary
-            model: gemini-2.0-flash
-            githubUrl: https://github.com/carlossg/rollouts-demo
-            extraPrompt: |
-              Ignore color changes.

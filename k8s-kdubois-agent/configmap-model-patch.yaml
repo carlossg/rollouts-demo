@@ -3,5 +3,8 @@ kind: ConfigMap
 metadata:
   name: kubernetes-agent-config
 data:
-  ANALYSIS_MODEL: gemini-3.5-flash
-  REMEDIATION_MODEL: gemini-3.5-flash
+  ANALYSIS_MODEL: gemini-4-hydrogen
+  # Deployment reads these keys via envFrom, so re-syncing alone does not reload
+  # existing pods: run `kubectl -n argo-rollouts rollout restart deployment/kubernetes-agent`
+  # after applying (automated by install_kubernetes_agent_kdubois in demo-functions.sh).
+  REMEDIATION_MODEL: gemini-4-hydrogen
